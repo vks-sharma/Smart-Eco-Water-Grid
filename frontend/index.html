@@ -330,7 +330,7 @@
         const maxDataPoints = 100;
 
         // Configuration
-        const API_ENDPOINT = '/api/water-data'; // Update with your actual API endpoint
+        const API_ENDPOINT = 'http://localhost:3000/latest-data';
         const UPDATE_INTERVAL = 5000; // 5 seconds
 
         // Initialize
@@ -341,13 +341,11 @@
 
         async function fetchData() {
             try {
-                // Replace with your actual API call
-                // const response = await fetch(API_ENDPOINT);
-                // const data = await response.json();
-                
-                // Mock data for demonstration
-                const data = generateMockData();
-                
+                const response = await fetch(API_ENDPOINT);
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status}`);
+                }
+                const data = await response.json();
                 updateDashboard(data);
                 clearErrorMessage();
             } catch (error) {
@@ -356,18 +354,9 @@
             }
         }
 
-        function generateMockData() {
-            // Generate realistic water quality data
-            return {
-                pH: (Math.random() * 2 + 6.8).toFixed(2), // 6.8 - 8.8
-                turbidity: (Math.random() * 8 + 0.5).toFixed(2), // 0.5 - 8.5 NTU
-                timestamp: new Date().toLocaleTimeString()
-            };
-        }
-
         function updateDashboard(data) {
-            // Update pH
-            const pH = parseFloat(data.pH);
+            // Backend returns ph (lowercase); support both ph and pH for compatibility
+            const pH = parseFloat(data.ph !== undefined ? data.ph : data.pH);
             document.getElementById('phValue').textContent = pH.toFixed(1);
             updatePHStatus(pH);
 
@@ -377,7 +366,7 @@
             updateTurbidityStatus(turbidity);
 
             // Update System Status
-            updateSystemStatus(pH, turbidity);
+            updateSystemStatus(data.status || null, pH, turbidity);
 
             // Store data for history
             dataHistory.push({ pH, turbidity, time: new Date() });
@@ -432,20 +421,25 @@
             statusElement.className = 'card-status ' + statusClass;
         }
 
-        function updateSystemStatus(pH, turbidity) {
+        function updateSystemStatus(backendStatus, pH, turbidity) {
             const statusElement = document.getElementById('statusValue');
             const systemStatusElement = document.getElementById('systemStatus');
 
-            let isHealthy = (pH >= 6.5 && pH <= 8.5) && (turbidity < 5);
-            
-            if (isHealthy) {
+            // Use backend status if available; fall back to local computation
+            const status = backendStatus || ((pH >= 6.5 && pH <= 8.5 && turbidity < 5) ? 'safe' : 'moderate');
+
+            if (status === 'safe') {
                 statusElement.textContent = '✓ Healthy';
                 systemStatusElement.textContent = '✓ All Systems Normal';
                 systemStatusElement.className = 'card-status status-good';
-            } else {
-                statusElement.textContent = '⚠ Needs Attention';
-                systemStatusElement.textContent = '⚠ Action Required';
+            } else if (status === 'moderate') {
+                statusElement.textContent = '⚠ Moderate';
+                systemStatusElement.textContent = '⚠ Suitable for Irrigation';
                 systemStatusElement.className = 'card-status status-warning';
+            } else {
+                statusElement.textContent = '✗ Unsafe';
+                systemStatusElement.textContent = '✗ Re-treatment Required';
+                systemStatusElement.className = 'card-status status-danger';
             }
         }
 

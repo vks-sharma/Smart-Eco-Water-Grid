@@ -1,9 +1,11 @@
 // frontend/app.js
 
+const BACKEND_URL = 'http://localhost:3000/latest-data';
+
 // Function to fetch data from the backend
 async function fetchData() {
     try {
-        const response = await fetch('http://backend-url/api/data'); // Replace with actual backend URL
+        const response = await fetch(BACKEND_URL);
         const data = await response.json();
         updateUI(data);
     } catch (error) {
@@ -19,8 +21,8 @@ function updateUI(data) {
     if (data.status === 'safe') {
         statusElement.textContent = 'Safe';
         indicatorElement.style.backgroundColor = 'green';
-    } else if (data.status === 'warning') {
-        statusElement.textContent = 'Warning';
+    } else if (data.status === 'moderate') {
+        statusElement.textContent = 'Moderate';
         indicatorElement.style.backgroundColor = 'yellow';
     } else if (data.status === 'unsafe') {
         statusElement.textContent = 'Unsafe';
@@ -28,8 +30,8 @@ function updateUI(data) {
     }
 }
 
-// Call fetchData every 5 minutes
-setInterval(fetchData, 5 * 60 * 1000);
+// Call fetchData every 5 seconds
+setInterval(fetchData, 5000);
 
 // Initial data fetch
 fetchData();

@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const { analyzeWaterQuality } = require('./ai/decision.js');
 
 const app = express();
 const PORT = 3000;
@@ -8,31 +9,8 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
-// Water quality thresholds
-const MIN_SAFE_PH = 6.5;
-const MAX_SAFE_PH = 8.5;
-const MAX_SAFE_TURBIDITY = 10;
-const MIN_MODERATE_TURBIDITY = 5;
-const MAX_MODERATE_TURBIDITY = 10;
-
 // In-memory store for the latest water data
 let latestData = null;
-
-/**
- * Applies AI decision logic to determine water status and recommended action.
- * @param {number} ph - pH value of the water sample (0–14)
- * @param {number} turbidity - Turbidity value of the water sample (≥ 0)
- * @returns {{ status: string, action: string }}
- */
-function analyzeWaterQuality(ph, turbidity) {
-  if (ph < MIN_SAFE_PH || ph > MAX_SAFE_PH || turbidity > MAX_SAFE_TURBIDITY) {
-    return { status: 'unsafe', action: 're-treat' };
-  }
-  if (turbidity >= MIN_MODERATE_TURBIDITY && turbidity <= MAX_MODERATE_TURBIDITY) {
-    return { status: 'moderate', action: 'irrigation' };
-  }
-  return { status: 'safe', action: 'reuse' };
-}
 
 // POST /sensor-data – Accept and process incoming sensor readings
 app.post('/sensor-data', (req, res) => {
@@ -54,9 +32,10 @@ app.post('/sensor-data', (req, res) => {
     return res.status(400).json({ error: 'turbidity must be 0 or greater.' });
   }
 
-  const { status, action } = analyzeWaterQuality(ph, turbidity);
+  const { status, action } = analyzeWaterQuality({ ph, turbidity });
 
   latestData = { ph, turbidity, status, action };
+  console.log(`[${new Date().toISOString()}] Sensor data received:`, latestData);
 
   return res.status(200).json(latestData);
 });

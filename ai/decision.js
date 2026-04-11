@@ -2,38 +2,61 @@ const EventEmitter = require('events');
 
 const sensorDataEventEmitter = new EventEmitter();
 
+// Water quality thresholds
+const MIN_SAFE_PH = 6.5;
+const MAX_SAFE_PH = 8.5;
+const MAX_SAFE_TURBIDITY = 10;
+const MIN_MODERATE_TURBIDITY = 5;
+
 // In-memory store for processed sensor records (capped at MAX_STORE_SIZE entries)
 const MAX_STORE_SIZE = 1000;
 const sensorDataStore = [];
 
 function analyzeWaterQuality(data) {
     const { ph, turbidity } = data;
+
+    // Input validation
+    if (typeof ph !== 'number' || ph < 0 || ph > 14) {
+        throw new Error('ph must be a number between 0 and 14.');
+    }
+    if (typeof turbidity !== 'number' || turbidity < 0) {
+        throw new Error('turbidity must be a non-negative number.');
+    }
+
     let status = 'safe';
+    let action = 'reuse';
     let recommendation = 'Water quality is good for consumption.';
-    
     const issues = [];
-    
+
     // Check pH levels
-    if (ph < 6.5 || ph > 8.5) {
+    if (ph < MIN_SAFE_PH || ph > MAX_SAFE_PH) {
         status = 'unsafe';
+        action = 're-treat';
         issues.push('pH level is outside safe range (6.5-8.5)');
     }
-    
+
     // Check turbidity
-    if (turbidity > 10) {
+    if (turbidity > MAX_SAFE_TURBIDITY) {
         status = 'unsafe';
+        action = 're-treat';
         issues.push('Turbidity exceeds safe limit (max: 10)');
+    } else if (turbidity >= MIN_MODERATE_TURBIDITY && status !== 'unsafe') {
+        status = 'moderate';
+        action = 'irrigation';
     }
-    
+
     // Generate recommendation
     if (status === 'unsafe') {
         recommendation = 'Water is unsafe. Issues: ' + issues.join('; ') + '. Consider treatment or alternative water source.';
+    } else if (status === 'moderate') {
+        recommendation = 'Water quality is acceptable for irrigation use.';
     }
-    
+
     return {
-        status: status,
-        recommendation: recommendation,
-        issues: issues
+        status,
+        action,
+        recommendation,
+        issues,
     };
 }
 

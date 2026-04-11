@@ -1,7 +1,7 @@
 const http = require('http');
 
 // Configuration
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 const SENSOR_ID = process.env.SENSOR_ID || 'sensor-01';
 const INTERVAL = 5000; // 5 seconds
 
@@ -18,33 +18,36 @@ function generateSensorData() {
 
 // Send sensor data to backend
 function sendSensorData() {
-  const data = generateSensorData();
-  
-  const options = {
-    hostname: new URL(BACKEND_URL).hostname,
-    port: new URL(BACKEND_URL).port || (BACKEND_URL.includes('https') ? 443 : 80),
-    path: '/api/sensor-data',
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(JSON.stringify(data)),
-    },
-  };
+  try {
+    const data = generateSensorData();
+    const body = JSON.stringify(data);
 
-  const req = http.request(options, (res) => {
-    console.log(`[${new Date().toISOString()}] Response status: ${res.statusCode}`);
-    res.on('data', (chunk) => {
-      // Handle response data if needed
+    const options = {
+      hostname: new URL(BACKEND_URL).hostname,
+      port: new URL(BACKEND_URL).port || (BACKEND_URL.includes('https') ? 443 : 80),
+      path: '/sensor-data',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
+      },
+    };
+
+    const req = http.request(options, (res) => {
+      console.log(`[${new Date().toISOString()}] Response status: ${res.statusCode}`);
+      res.on('data', () => {});
     });
-  });
 
-  req.on('error', (error) => {
-    console.error(`[${new Date().toISOString()}] Error sending data:`, error.message);
-  });
+    req.on('error', (error) => {
+      console.error(`[${new Date().toISOString()}] Error sending data:`, error.message);
+    });
 
-  console.log(`[${new Date().toISOString()}] Sending data:`, data);
-  req.write(JSON.stringify(data));
-  req.end();
+    console.log(`[${new Date().toISOString()}] Sending data:`, data);
+    req.write(body);
+    req.end();
+  } catch (error) {
+    console.error(`[${new Date().toISOString()}] Unexpected error in sendSensorData:`, error.message);
+  }
 }
 
 // Start simulation

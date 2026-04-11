@@ -1,3 +1,11 @@
+const EventEmitter = require('events');
+
+const sensorDataEventEmitter = new EventEmitter();
+
+// In-memory store for processed sensor records (capped at MAX_STORE_SIZE entries)
+const MAX_STORE_SIZE = 1000;
+const sensorDataStore = [];
+
 function analyzeWaterQuality(data) {
     const { ph, turbidity } = data;
     let status = 'safe';
@@ -29,4 +37,38 @@ function analyzeWaterQuality(data) {
     };
 }
 
-module.exports = analyzeWaterQuality;
+/**
+ * Listens for incoming sensor data events, analyzes water quality,
+ * and stores the result together with the original sensor data.
+ * @param {Function} [onStore] - Optional callback invoked with each stored record.
+ * @returns {Function} Cleanup function that removes the event listener.
+ */
+function sensorDataListener(onStore) {
+    function handleSensorData(sensorData) {
+        const analysis = analyzeWaterQuality(sensorData);
+        const record = {
+            ...sensorData,
+            analysis
+        };
+        if (sensorDataStore.length >= MAX_STORE_SIZE) {
+            sensorDataStore.shift();
+        }
+        sensorDataStore.push(record);
+        if (typeof onStore === 'function') {
+            onStore(record);
+        }
+    }
+
+    sensorDataEventEmitter.on('sensorData', handleSensorData);
+
+    return function cleanup() {
+        sensorDataEventEmitter.off('sensorData', handleSensorData);
+    };
+}
+
+module.exports = {
+    analyzeWaterQuality,
+    sensorDataListener,
+    sensorDataEventEmitter,
+    sensorDataStore
+};

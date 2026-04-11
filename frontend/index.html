@@ -1,1 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Eco Water Grid - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-right: 15px;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .card-unit {
+            font-size: 1rem;
+            color: #999;
+            margin-left: 5px;
+        }
+
+        .card-status {
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .status-good {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Metric-specific colors */
+        .pH-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .turbidity-icon {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .status-icon {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .stats-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            margin-top: 40px;
+        }
+
+        .footer p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .last-updated {
+            font-size: 0.85rem;
+            margin-top: 10px;
+            opacity: 0.8;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #667eea;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .card-value {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💧 Smart Eco Water Grid</h1>
+            <p>Real-time Water Quality Monitoring Dashboard</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <div class="dashboard">
+            <!-- pH Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon pH-icon">🧪</div>
+                    <h2 class="card-title">pH Level</h2>
+                </div>
+                <div class="card-value">
+                    <span id="phValue">--</span>
+                    <span class="card-unit">pH</span>
+                </div>
+                <span class="card-status" id="phStatus">--</span>
+                <p style="font-size: 0.85rem; color: #999; margin-top: 10px;">Optimal: 6.5 - 8.5</p>
+            </div>
+
+            <!-- Turbidity Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon turbidity-icon">💨</div>
+                    <h2 class="card-title">Turbidity</h2>
+                </div>
+                <div class="card-value">
+                    <span id="turbidityValue">--</span>
+                    <span class="card-unit">NTU</span>
+                </div>
+                <span class="card-status" id="turbidityStatus">--</span>
+                <p style="font-size: 0.85rem; color: #999; margin-top: 10px;">Optimal: &lt; 5 NTU</p>
+            </div>
+
+            <!-- Status Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon status-icon">📊</div>
+                    <h2 class="card-title">System Status</h2>
+                </div>
+                <div class="card-value">
+                    <span id="statusValue">--</span>
+                </div>
+                <span class="card-status" id="systemStatus">--</span>
+                <p style="font-size: 0.85rem; color: #999; margin-top: 10px;"><span class="loading"></span> Updating...</p>
+            </div>
+        </div>
+
+        <div class="stats-container">
+            <h2 style="margin-bottom: 20px; color: #333;">Water Quality Summary</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Average pH</div>
+                    <div class="stat-value" id="avgPh">--</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Average Turbidity</div>
+                    <div class="stat-value" id="avgTurbidity">--</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Data Points</div>
+                    <div class="stat-value" id="dataPoints">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Last Updated</div>
+                    <div class="stat-value" id="lastUpdate">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Smart Eco Water Grid - Sustainable Water Management System</p>
+            <div class="last-updated">
+                <span id="updateIndicator">⏱️ Auto-refreshing every 5 seconds</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let dataHistory = [];
+        const maxDataPoints = 100;
+
+        // Configuration
+        const API_ENDPOINT = '/api/water-data'; // Update with your actual API endpoint
+        const UPDATE_INTERVAL = 5000; // 5 seconds
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchData();
+            setInterval(fetchData, UPDATE_INTERVAL);
+        });
+
+        async function fetchData() {
+            try {
+                // Replace with your actual API call
+                // const response = await fetch(API_ENDPOINT);
+                // const data = await response.json();
+                
+                // Mock data for demonstration
+                const data = generateMockData();
+                
+                updateDashboard(data);
+                clearErrorMessage();
+            } catch (error) {
+                showErrorMessage('Failed to fetch water quality data. Please check your connection.');
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        function generateMockData() {
+            // Generate realistic water quality data
+            return {
+                pH: (Math.random() * 2 + 6.8).toFixed(2), // 6.8 - 8.8
+                turbidity: (Math.random() * 8 + 0.5).toFixed(2), // 0.5 - 8.5 NTU
+                timestamp: new Date().toLocaleTimeString()
+            };
+        }
+
+        function updateDashboard(data) {
+            // Update pH
+            const pH = parseFloat(data.pH);
+            document.getElementById('phValue').textContent = pH.toFixed(1);
+            updatePHStatus(pH);
+
+            // Update Turbidity
+            const turbidity = parseFloat(data.turbidity);
+            document.getElementById('turbidityValue').textContent = turbidity.toFixed(1);
+            updateTurbidityStatus(turbidity);
+
+            // Update System Status
+            updateSystemStatus(pH, turbidity);
+
+            // Store data for history
+            dataHistory.push({ pH, turbidity, time: new Date() });
+            if (dataHistory.length > maxDataPoints) {
+                dataHistory.shift();
+            }
+
+            // Update statistics
+            updateStatistics();
+
+            // Update last updated time
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        }
+
+        function updatePHStatus(pH) {
+            const statusElement = document.getElementById('phStatus');
+            let status = '';
+            let statusClass = '';
+
+            if (pH >= 6.5 && pH <= 8.5) {
+                status = '✓ Optimal';
+                statusClass = 'status-good';
+            } else if ((pH >= 6.0 && pH < 6.5) || (pH > 8.5 && pH <= 9.0)) {
+                status = '⚠ Acceptable';
+                statusClass = 'status-warning';
+            } else {
+                status = '✗ Poor';
+                statusClass = 'status-danger';
+            }
+
+            statusElement.textContent = status;
+            statusElement.className = 'card-status ' + statusClass;
+        }
+
+        function updateTurbidityStatus(turbidity) {
+            const statusElement = document.getElementById('turbidityStatus');
+            let status = '';
+            let statusClass = '';
+
+            if (turbidity < 5) {
+                status = '✓ Clear';
+                statusClass = 'status-good';
+            } else if (turbidity < 10) {
+                status = '⚠ Slightly Turbid';
+                statusClass = 'status-warning';
+            } else {
+                status = '✗ Very Turbid';
+                statusClass = 'status-danger';
+            }
+
+            statusElement.textContent = status;
+            statusElement.className = 'card-status ' + statusClass;
+        }
+
+        function updateSystemStatus(pH, turbidity) {
+            const statusElement = document.getElementById('statusValue');
+            const systemStatusElement = document.getElementById('systemStatus');
+
+            let isHealthy = (pH >= 6.5 && pH <= 8.5) && (turbidity < 5);
+            
+            if (isHealthy) {
+                statusElement.textContent = '✓ Healthy';
+                systemStatusElement.textContent = '✓ All Systems Normal';
+                systemStatusElement.className = 'card-status status-good';
+            } else {
+                statusElement.textContent = '⚠ Needs Attention';
+                systemStatusElement.textContent = '⚠ Action Required';
+                systemStatusElement.className = 'card-status status-warning';
+            }
+        }
+
+        function updateStatistics() {
+            if (dataHistory.length === 0) return;
+
+            // Calculate averages
+            const avgPH = (dataHistory.reduce((sum, d) => sum + d.pH, 0) / dataHistory.length).toFixed(1);
+            const avgTurbidity = (dataHistory.reduce((sum, d) => sum + d.turbidity, 0) / dataHistory.length).toFixed(1);
+
+            document.getElementById('avgPh').textContent = avgPH;
+            document.getElementById('avgTurbidity').textContent = avgTurbidity;
+            document.getElementById('dataPoints').textContent = dataHistory.length;
+        }
+
+        function showErrorMessage(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = '❌ ' + message;
+            errorElement.style.display = 'block';
+        }
+
+        function clearErrorMessage() {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

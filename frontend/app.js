@@ -561,7 +561,12 @@ let deployInited     = false; // Tracks if buttons + first fetch have been wired
 
 function deploy$(id) { return document.getElementById(id); }
 
-/** Color for a node marker based on type and quality */
+/** Safely format a numeric value to 2 decimal places, returning '?' for non-numbers */
+function deployFmt(v) {
+    return typeof v === 'number' && isFinite(v) ? v.toFixed(2) : '?';
+}
+
+
 function deployNodeColor(node) {
     if (node.type === 'house') return '#2563eb';
     if (node.quality < 0.60)  return '#e11d48';   // bad
@@ -646,7 +651,7 @@ function deployDrawLayers(nodes, links) {
         });
 
         poly.bindTooltip(
-            `Link ${link.id}: ${link.from} → ${link.to} | status: ${link.status} | flow: ${link.flow.toFixed(2)}`,
+            `Link ${link.id}: ${link.from} → ${link.to} | status: ${link.status} | flow: ${deployFmt(link.flow)}`,
             { sticky: true }
         );
 
@@ -655,7 +660,7 @@ function deployDrawLayers(nodes, links) {
                 `Link ${link.id}\n` +
                 `${link.from} → ${link.to}\n` +
                 `Status: ${link.status}\n` +
-                `Flow: ${link.flow.toFixed(2)}`
+                `Flow: ${deployFmt(link.flow)}`
             );
             deployShowControls(link.id);
         });
@@ -679,11 +684,11 @@ function deployDrawLayers(nodes, links) {
             const lines = [
                 `${node.name} (${node.id})`,
                 `Type: ${node.type}`,
-                `Flow: ${node.flow.toFixed(2)}`,
-                `Quality: ${node.quality.toFixed(2)}`
+                `Flow: ${deployFmt(node.flow)}`,
+                `Quality: ${deployFmt(node.quality)}`
             ];
             if (node.type === 'wetland' && node.capacity !== null && node.capacity !== undefined) {
-                lines.push(`Capacity: ${node.capacity.toFixed(2)}`);
+                lines.push(`Capacity: ${deployFmt(node.capacity)}`);
             }
             deploySetSelection(lines.join('\n'));
             deployHideControls();
@@ -713,7 +718,7 @@ async function fetchDeploymentStatus() {
                     `Link ${link.id}\n` +
                     `${link.from} → ${link.to}\n` +
                     `Status: ${link.status}\n` +
-                    `Flow: ${link.flow.toFixed(2)}`
+                    `Flow: ${deployFmt(link.flow)}`
                 );
             }
         }

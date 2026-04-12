@@ -1,12 +1,17 @@
 'use strict';
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'sewg-dev-secret-change-in-prod';
-
-if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
-  console.error('FATAL: JWT_SECRET environment variable must be set in production.');
-  process.exit(1);
+if (!process.env.JWT_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('FATAL: JWT_SECRET environment variable must be set in production.');
+    process.exit(1);
+  }
+  // In development, generate a random ephemeral secret so no fixed weak default
+  // is ever present in the codebase. Tokens will be invalidated on each restart.
+  console.warn('WARNING: JWT_SECRET not set. Using an ephemeral random secret (dev only). Set JWT_SECRET env var for persistent tokens.');
 }
+
+const JWT_SECRET = process.env.JWT_SECRET || require('crypto').randomBytes(32).toString('hex');
 
 /**
  * Middleware: require a valid JWT. Returns 401 if missing/invalid.

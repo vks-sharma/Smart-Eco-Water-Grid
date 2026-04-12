@@ -13,13 +13,17 @@ const MAX_STORE_SIZE = 1000;
 const sensorDataStore = [];
 
 function analyzeWaterQuality(data) {
+    if (data === null || typeof data !== 'object') {
+        throw new Error('data must be a non-null object.');
+    }
+
     const { ph, turbidity } = data;
 
     // Input validation
-    if (typeof ph !== 'number' || ph < 0 || ph > 14) {
+    if (!Number.isFinite(ph) || ph < 0 || ph > 14) {
         throw new Error('ph must be a number between 0 and 14.');
     }
-    if (typeof turbidity !== 'number' || turbidity < 0) {
+    if (!Number.isFinite(turbidity) || turbidity < 0) {
         throw new Error('turbidity must be a non-negative number.');
     }
 

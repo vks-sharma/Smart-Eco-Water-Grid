@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Eco Water Grid - Dashboard</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Leaflet CSS for the Deployment map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
     <!-- Chart.js for real-time trend charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   
@@ -239,9 +241,60 @@
 
             <section id="section-deployment" class="content-section" data-section="deployment">
                 <div class="section-card">
-                    <h2>Deployment</h2>
-                    <p>Use this area to show device provisioning, endpoint configuration, and deployment status.</p>
-                    <p style="margin-top:10px;color:var(--muted2);font-size:0.9rem;">(Placeholder section — wire to backend/deployment data when ready.)</p>
+                    <!-- Deployment header -->
+                    <div class="deployment-header">
+                        <div>
+                            <h2>🗺️ Deployment Map</h2>
+                            <p>Village wetland STP network near Mathura — real-time monitoring and AI-assisted flow control.</p>
+                        </div>
+                        <div class="deployment-actions">
+                            <button class="btn-header btn-refresh" id="deployRefreshBtn" type="button" title="Refresh deployment data">🔄 Refresh</button>
+                        </div>
+                    </div>
+
+                    <!-- Map + side panel -->
+                    <div class="deployment-grid">
+                        <!-- Leaflet map container -->
+                        <div class="deployment-map-wrap">
+                            <div id="deploymentMap" class="deployment-map" aria-label="Deployment map"></div>
+                        </div>
+
+                        <!-- Side panel: status, AI recs, selection, controls -->
+                        <div class="deployment-panel" aria-label="Deployment controls and status">
+                            <div class="panel-title">Network Status</div>
+                            <div class="panel-kpis">
+                                <div class="kpi">
+                                    <div class="kpi-label">Nodes</div>
+                                    <div class="kpi-value" id="deployNodesCount">--</div>
+                                </div>
+                                <div class="kpi">
+                                    <div class="kpi-label">Links</div>
+                                    <div class="kpi-value" id="deployLinksCount">--</div>
+                                </div>
+                                <div class="kpi">
+                                    <div class="kpi-label">Alerts</div>
+                                    <div class="kpi-value" id="deployAlertsCount">--</div>
+                                </div>
+                            </div>
+
+                            <div class="panel-title" style="margin-top:12px;">🤖 AI Recommendations</div>
+                            <div id="deployAiBox" class="ai-box">Waiting for deployment data…</div>
+
+                            <div class="panel-title" style="margin-top:12px;">Selected</div>
+                            <div id="deploySelection" class="selection-box">Click a node or a link on the map.</div>
+
+                            <!-- Operator controls (shown when a link is selected) -->
+                            <div id="deployControlBox" class="deploy-control-box" style="display:none;">
+                                <div class="panel-title" style="margin-top:10px;">Flow Control</div>
+                                <div class="deploy-controls">
+                                    <button class="btn-ctrl btn-stop"     id="deployStopBtn"     type="button">🚫 Stop</button>
+                                    <button class="btn-ctrl btn-transfer" id="deployTransferBtn" type="button">🔀 Transfer</button>
+                                    <button class="btn-ctrl btn-retain"   id="deployRetainBtn"   type="button">🔒 Retain</button>
+                                </div>
+                                <div id="deployControlStatus" class="control-status"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -314,6 +367,8 @@
         })();
     </script>
 
+    <!-- Leaflet JS for the Deployment map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
     <script src="app.js"></script>
 </body>
 </html>

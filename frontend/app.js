@@ -1,6 +1,6 @@
 // frontend/app.js – Real-time water quality dashboard logic
 
-// ─── Configuration ────────────────────────────────────────────────────────────
+// ─── Configuration ─────────────────────────────────────────────────────────────
 const API_ENDPOINT = '/latest-data';
 const REFRESH_INTERVAL = 3000; // 3 seconds as specified
 const MAX_CHART_POINTS = 20;
@@ -142,7 +142,7 @@ function updateCharts(ph, turbidity, label) {
     });
 }
 
-// ─── Progress bars ────────────────────────────────────────────────────────────
+// ─── Progress bars ─────────────────────────────────────────────────────────────
 function updateProgressBars(ph, turbidity) {
     // pH bar: 0–14 range, safe zone highlighted
     const phPct = Math.min(100, Math.max(0, (ph / 14) * 100));
@@ -161,7 +161,7 @@ function updateProgressBars(ph, turbidity) {
     }
 }
 
-// ─── Status helpers ───────────────────────────────────────────────────────────
+// ─── Status helpers ────────────────────────────────────────────────────────────
 function getPhClass(ph) {
     if (ph >= PH_MIN && ph <= PH_MAX) return 'good';
     if ((ph >= 6.0 && ph < PH_MIN) || (ph > PH_MAX && ph <= 9.0)) return 'warning';
@@ -189,6 +189,45 @@ function statusEmoji(status) {
 function actionLabel(action) {
     const map = { reuse: '♻️ Safe for reuse', irrigation: '🌱 Use for irrigation', 're-treat': '🔄 Requires re-treatment' };
     return map[action] || ('🔄 ' + (action || 'Unknown'));
+}
+
+// ─── Sidebar navigation ────────────────────────────────────────────────────────
+// Expects sidebar menu items with data-target attributes, e.g.:
+//   <a class="sidebar-link" data-target="dashboard">Dashboard</a>
+// and corresponding sections with IDs:
+//   dashboardSection, deploymentSection, settingsSection
+function initSidebarNavigation() {
+    const sectionsByKey = {
+        dashboard: $('dashboardSection'),
+        deployment: $('deploymentSection'),
+        settings: $('settingsSection')
+    };
+
+    const showSection = (key) => {
+        Object.entries(sectionsByKey).forEach(([k, el]) => {
+            if (!el) return;
+            el.style.display = (k === key) ? '' : 'none';
+        });
+
+        // Optional: active state on menu items
+        const items = document.querySelectorAll('[data-target]');
+        items.forEach(item => {
+            item.classList.toggle('active', item.getAttribute('data-target') === key);
+        });
+    };
+
+    const menuItems = document.querySelectorAll('[data-target]');
+    menuItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = item.getAttribute('data-target');
+            if (!target) return;
+            showSection(target);
+        });
+    });
+
+    // Default view
+    showSection('dashboard');
 }
 
 // ─── Dashboard update ─────────────────────────────────────────────────────────
@@ -294,7 +333,7 @@ function updateDashboard(data) {
     if (dataPointsEl) animateValue(dataPointsEl, dataHistory.length);
 }
 
-// ─── Quick stats ──────────────────────────────────────────────────────────────
+// ─── Quick stats ──────────────────────────────────────────────���───────────────
 function updateQuickStats() {
     if (dataHistory.length === 0) return;
 
@@ -476,8 +515,11 @@ function startLiveClock() {
     setInterval(tick, 1000);
 }
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
+// ─── Init ────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+    // Sidebar navigation
+    initSidebarNavigation();
+
     // Wire up buttons
     const refreshBtn = $('refreshBtn');
     if (refreshBtn) refreshBtn.addEventListener('click', manualRefresh);

@@ -1,65 +1,55 @@
 const http = require('http');
 
-// Configuration
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
-const SENSOR_ID = process.env.SENSOR_ID || 'sensor-01';
-const INTERVAL = 5000; // 5 seconds
+const SENSOR_ID   = process.env.SENSOR_ID   || 'sensor-01';
+const INTERVAL    = parseInt(process.env.INTERVAL, 10) || 5000;
 
-// Generate realistic sensor data
+function rand(base, spread) {
+  return Math.round((base + (Math.random() - 0.5) * spread * 2) * 100) / 100;
+}
+
 function generateSensorData() {
   return {
-    sensorId: SENSOR_ID,
-    timestamp: new Date().toISOString(),
-    ph: 6.5 + (Math.random() - 0.5) * 1.5, // pH range: 5.75 - 7.25
-
-    // ✅ FIXED TURBIDITY RANGE
-    turbidity: Math.random() * 15, // 0–15 NTU (safe + moderate + unsafe)
-
-    temperature: 20 + (Math.random() - 0.5) * 8,
+    sensorId:        SENSOR_ID,
+    timestamp:       new Date().toISOString(),
+    ph:              rand(7.0, 0.8),           // 6.2 – 7.8
+    turbidity:       rand(6.0, 5.0),           // 1 – 11 NTU
+    temperature:     rand(23.0, 6.0),          // 17 – 29 °C
+    dissolvedOxygen: rand(7.5, 2.0),           // 5.5 – 9.5 mg/L
+    conductivity:    rand(380, 150),           // 230 – 530 µS/cm
+    tds:             rand(260, 100),           // 160 – 360 mg/L
   };
 }
 
-// Send sensor data to backend
 function sendSensorData() {
-  const data = generateSensorData();
-  
+  const data    = generateSensorData();
+  const payload = JSON.stringify(data);
+
   const options = {
     hostname: new URL(BACKEND_URL).hostname,
-    port: new URL(BACKEND_URL).port || (BACKEND_URL.includes('https') ? 443 : 80),
-    path: '/sensor-data',
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(JSON.stringify(data)),
-    },
+    port:     new URL(BACKEND_URL).port || (BACKEND_URL.startsWith('https') ? 443 : 80),
+    path:     '/sensor-data',
+    method:   'POST',
+    headers:  { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
   };
 
-  const req = http.request(options, (res) => {
-    console.log(`[${new Date().toISOString()}] Response status: ${res.statusCode}`);
+  const req = http.request(options, res => {
+    console.log(`[${new Date().toISOString()}] Response: ${res.statusCode}`);
   });
 
-  req.on('error', (error) => {
-    console.error(`[${new Date().toISOString()}] Error sending data:`, error.message);
+  req.on('error', err => {
+    console.error(`[${new Date().toISOString()}] Error:`, err.message);
   });
 
-  console.log(`[${new Date().toISOString()}] Sending data:`, data);
-  req.write(JSON.stringify(data));
+  console.log(`[${new Date().toISOString()}] Sending:`, data);
+  req.write(payload);
   req.end();
 }
 
-// Start simulation
-console.log(`Starting sensor simulation. Sending data every ${INTERVAL / 1000} seconds...`);
-console.log(`Backend URL: ${BACKEND_URL}`);
-console.log(`Sensor ID: ${SENSOR_ID}`);
+console.log(`Sensor simulation starting (interval: ${INTERVAL}ms)`);
+console.log(`Backend: ${BACKEND_URL}  |  Sensor: ${SENSOR_ID}`);
 
-// Send initial data immediately
 sendSensorData();
-
-// Send data periodically
 setInterval(sendSensorData, INTERVAL);
 
-// Graceful shutdown
-process.on('SIGINT', () => {
-  console.log('\nSimulation stopped.');
-  process.exit(0);
-});
+process.on('SIGINT', () => { console.log('\nSimulation stopped.'); process.exit(0); });

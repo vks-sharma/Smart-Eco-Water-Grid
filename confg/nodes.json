@@ -1,0 +1,17 @@
+{
+  "nodes": [
+    { "id": "H1", "type": "house",   "name": "Cluster A (Houses)",  "lat": 27.5004, "lng": 77.6637, "flow": 0.60, "quality": 0.80 },
+    { "id": "H2", "type": "house",   "name": "Cluster B (Houses)",  "lat": 27.4954, "lng": 77.6857, "flow": 0.50, "quality": 0.78 },
+    { "id": "H3", "type": "house",   "name": "Cluster C (Houses)",  "lat": 27.4864, "lng": 77.6777, "flow": 0.40, "quality": 0.82 },
+    { "id": "W1", "type": "wetland", "name": "Wetland STP 1",       "lat": 27.4974, "lng": 77.6727, "flow": 0.70, "quality": 0.72, "capacity": 0.75 },
+    { "id": "W2", "type": "wetland", "name": "Wetland STP 2",       "lat": 27.4904, "lng": 77.6757, "flow": 0.60, "quality": 0.76, "capacity": 0.70 },
+    { "id": "W3", "type": "wetland", "name": "Wetland STP 3",       "lat": 27.4849, "lng": 77.6657, "flow": 0.55, "quality": 0.80, "capacity": 0.65 }
+  ],
+  "links": [
+    { "id": "L1", "from": "H1", "to": "W1", "status": "open", "flow": 0.60 },
+    { "id": "L2", "from": "H2", "to": "W2", "status": "open", "flow": 0.50 },
+    { "id": "L3", "from": "H3", "to": "W2", "status": "open", "flow": 0.40 },
+    { "id": "L4", "from": "W1", "to": "W2", "status": "open", "flow": 0.45 },
+    { "id": "L5", "from": "W2", "to": "W3", "status": "open", "flow": 0.35 }
+  ]
+}

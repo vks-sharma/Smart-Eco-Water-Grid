@@ -6,209 +6,230 @@ let nodeLayer;
 let linkLayer;
 let currentNodes = [];
 
-let turbidityChart, phChart;
-let mapInitialized = false;
+// =========================
+// SECTION NAVIGATION
+// =========================
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+  document.querySelectorAll('.sidebar a[data-section]').forEach(a => a.classList.remove('active'));
+
+  const section = document.getElementById(id);
+  if (section) section.style.display = 'block';
+
+  const navLink = document.querySelector(`.sidebar a[data-section="${id}"]`);
+  if (navLink) navLink.classList.add('active');
+
+  if (id === 'deployment') {
+    setTimeout(() => {
+      if (!window.mapInitialized) { initMap(); window.mapInitialized = true; }
+      else if (map) { map.invalidateSize(); }
+    }, 200);
+  }
+
+  if (id === 'dashboard') {
+    if (!window.chartInitialized) { initDashboardCharts(); window.chartInitialized = true; }
+  }
+
+  if (id === 'settings') {
+    loadSettings();
+  }
+}
+
+// =========================
+// THEME TOGGLE
+// =========================
+function toggleTheme() {
+  const isDark = !AppState.darkMode;
+  AppState.setDarkMode(isDark);
+  const btn = document.getElementById('themeBtn');
+  if (btn) btn.innerText = isDark ? '☀️' : '🌙';
+}
 
 // =========================
 // MAP INIT
 // =========================
 function initMap() {
-    map = L.map('deploymentMap').setView([27.4924, 77.6737], 13);
+  map = L.map('deploymentMap').setView([27.4924, 77.6737], 13);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19
-    }).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
 
-    nodeLayer = L.layerGroup().addTo(map);
-    linkLayer = L.layerGroup().addTo(map);
+  nodeLayer = L.layerGroup().addTo(map);
+  linkLayer = L.layerGroup().addTo(map);
 
-    loadDeployment();
-
-    setInterval(loadDeployment, 5000);
+  loadDeployment();
+  setInterval(loadDeployment, 30000);
 }
 
 // =========================
 // LOAD DEPLOYMENT
 // =========================
 function loadDeployment() {
-    fetch('/deployment-status')
-        .then(res => res.json())
-        .then(data => {
-            renderNodes(data.nodes);
-            renderLinks(data.links);
-            updateAI(data.ai);
-            showAlerts(data.alerts);
-        })
-        .catch(err => console.error("Deployment error:", err));
+  fetch('/deployment-status')
+    .then(res => res.json())
+    .then(data => {
+      renderNodes(data.nodes);
+      renderLinks(data.links);
+      updateAI(data.ai);
+      showDeploymentAlerts(data.alerts);
+    })
+    .catch(err => console.error('Deployment error:', err));
 }
 
 // =========================
 // NODES
 // =========================
 function renderNodes(nodes) {
-    nodeLayer.clearLayers();
-    currentNodes = nodes;
+  nodeLayer.clearLayers();
+  currentNodes = nodes;
 
-    nodes.forEach(node => {
-        let color = node.type === 'wetland' ? 'green' : 'blue';
+  nodes.forEach(node => {
+    let color = node.type === 'wetland' ? '#16a34a' : '#2563eb';
+    if (node.quality < 0.65) color = '#dc2626';
 
-        if (node.quality < 0.65) color = 'red';
-
-        L.circleMarker([node.lat, node.lng], {
-            radius: 8,
-            color: color
-        })
-        .addTo(nodeLayer)
-        .bindPopup(`
-            <b>${node.name}</b><br>
-            Flow: ${node.flow.toFixed(2)}<br>
-            Quality: ${node.quality.toFixed(2)}
-        `);
-    });
+    L.circleMarker([node.lat, node.lng], {
+      radius: 9,
+      color,
+      fillColor: color,
+      fillOpacity: 0.8,
+      weight: 2
+    })
+    .addTo(nodeLayer)
+    .on('click', () => openNodePanel(node.id));
+  });
 }
 
 // =========================
 // LINKS
 // =========================
 function renderLinks(links) {
-    linkLayer.clearLayers();
-
-    links.forEach(link => {
-        const from = currentNodes.find(n => n.id === link.from);
-        const to = currentNodes.find(n => n.id === link.to);
-
-        if (from && to) {
-            L.polyline([
-                [from.lat, from.lng],
-                [to.lat, to.lng]
-            ], {
-                color: link.status === 'closed' ? 'red' : 'gray',
-                weight: 3
-            }).addTo(linkLayer);
-        }
-    });
+  linkLayer.clearLayers();
+  links.forEach(link => {
+    const from = currentNodes.find(n => n.id === link.from);
+    const to   = currentNodes.find(n => n.id === link.to);
+    if (from && to) {
+      L.polyline([[from.lat, from.lng], [to.lat, to.lng]], {
+        color:  link.status === 'closed' ? '#dc2626' : link.status === 'throttled' ? '#f59e0b' : '#6b7280',
+        weight: 3,
+        dashArray: link.status === 'throttled' ? '6,4' : null,
+      }).addTo(linkLayer);
+    }
+  });
 }
 
 // =========================
 // DASHBOARD UPDATE
 // =========================
 function updateDashboard() {
-    fetch('/latest-data')
-        .then(res => res.json())
-        .then(data => {
+  fetch('/latest-data')
+    .then(res => {
+      if (!res.ok) return null;
+      return res.json();
+    })
+    .then(data => {
+      if (!data) return;
+      AppState.latestData = data;
 
-            document.getElementById('phValue').innerText = data.ph.toFixed(2);
-            document.getElementById('turbidityValue').innerText = data.turbidity.toFixed(2);
+      setCard('phValue',        data.ph,              'ph');
+      setCard('turbidityValue', data.turbidity,        'turbidity');
+      setCard('tempValue',      data.temperature,      'temperature', '°C');
+      setCard('doValue',        data.dissolvedOxygen,  'dissolvedOxygen', ' mg/L');
+      setCard('statusValue',    data.status ? data.status.toUpperCase() : '--', null);
 
-            document.getElementById('tempValue').innerText =
-                data.temperature ? data.temperature.toFixed(1) + "°C" : "--";
+      showDashboardAlerts(data);
+      updateDashboardCharts(data);
+    })
+    .catch(() => {});
+}
 
-            document.getElementById('doValue').innerText =
-                data.dissolvedOxygen ? data.dissolvedOxygen.toFixed(2) : "--";
+function setCard(elId, value, param, suffix) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const formatted = value != null ? (typeof value === 'number' ? value.toFixed(2) : value) : '--';
+  el.textContent = formatted + (suffix && value != null ? suffix : '');
 
-            document.getElementById('statusValue').innerText =
-                data.status.toUpperCase();
-
-            showDashboardAlerts(data);
-            updateCharts(data);
-
-        })
-        .catch(() => console.log("No data yet"));
+  if (param) {
+    const status = AppState.classifyParam(param, value);
+    el.className = 'card-value status-' + status;
+  }
 }
 
 // =========================
-// ALERTS (Dashboard)
+// DASHBOARD ALERTS
 // =========================
 function showDashboardAlerts(data) {
-    const panel = document.getElementById('dashboardAlerts');
-    panel.innerHTML = "";
+  const panel = document.getElementById('dashboardAlerts');
+  if (!panel) return;
+  panel.innerHTML = '';
 
-    if (data.turbidity > 10) createAlert(panel, "High turbidity!");
-    if (data.ph < 6.5 || data.ph > 8.5) createAlert(panel, "Unsafe pH!");
-    if (data.temperature && data.temperature > 30) createAlert(panel, "High temperature!");
-    if (data.dissolvedOxygen && data.dissolvedOxygen < 5) createAlert(panel, "Low oxygen!");
+  function check(param, value, label) {
+    if (value == null) return;
+    const cls = AppState.classifyParam(param, value);
+    if (cls === 'unsafe')        createBanner(panel, `⚠ ${label} is UNSAFE (${value.toFixed ? value.toFixed(2) : value})`, 'danger');
+    else if (cls === 'moderate') createBanner(panel, `⚡ ${label} is MODERATE (${value.toFixed ? value.toFixed(2) : value})`, 'warning');
+  }
+
+  check('ph',              data.ph,              'pH');
+  check('turbidity',       data.turbidity,       'Turbidity');
+  check('temperature',     data.temperature,     'Temperature');
+  check('dissolvedOxygen', data.dissolvedOxygen, 'Dissolved Oxygen');
+  check('conductivity',    data.conductivity,    'Conductivity');
 }
 
-function createAlert(panel, msg) {
-    const div = document.createElement('div');
-    div.className = "notification-banner danger";
-    div.innerText = msg;
-    panel.appendChild(div);
+function createBanner(panel, msg, type) {
+  const div = document.createElement('div');
+  div.className = 'notification-banner ' + type;
+  div.textContent = msg;
+  panel.appendChild(div);
 }
 
 // =========================
 // DEPLOYMENT ALERTS
 // =========================
-function showAlerts(alerts) {
-    const panel = document.getElementById('notificationPanel');
-    panel.innerHTML = "";
-
-    alerts.forEach(alert => {
-        const div = document.createElement('div');
-        div.className = "notification-banner danger";
-        div.innerText = alert.message;
-        panel.appendChild(div);
-    });
+function showDeploymentAlerts(alerts) {
+  const panel = document.getElementById('notificationPanel');
+  if (!panel) return;
+  panel.innerHTML = '';
+  (alerts || []).forEach(alert => {
+    createBanner(panel, alert.message, 'danger');
+  });
 }
 
 // =========================
 // AI PANEL
 // =========================
 function updateAI(ai) {
-    const list = document.getElementById('aiList');
-    list.innerHTML = "";
-
-    ai.recommendations.forEach(r => {
-        const li = document.createElement('li');
-        li.innerText = r;
-        list.appendChild(li);
-    });
+  const list = document.getElementById('aiList');
+  if (!list) return;
+  list.innerHTML = '';
+  (ai.recommendations || []).forEach(r => {
+    const li = document.createElement('li');
+    li.textContent = r;
+    list.appendChild(li);
+  });
 }
 
 // =========================
-// CHARTS INIT
+// BOOT
 // =========================
-function initCharts() {
-    const ctx1 = document.getElementById('turbidityChart').getContext('2d');
-    const ctx2 = document.getElementById('phChart').getContext('2d');
+async function boot() {
+  AppState.init();
+  updateAuthUI();
 
-    turbidityChart = new Chart(ctx1, {
-        type: 'line',
-        data: { labels: [], datasets: [{ label: 'Turbidity', data: [] }] },
-        options: { animation: false }
-    });
+  // Apply saved dark mode button state
+  const themeBtn = document.getElementById('themeBtn');
+  if (themeBtn) themeBtn.innerText = AppState.darkMode ? '☀️' : '🌙';
 
-    phChart = new Chart(ctx2, {
-        type: 'line',
-        data: { labels: [], datasets: [{ label: 'pH', data: [] }] },
-        options: { animation: false }
-    });
+  // Load thresholds first so card colouring is available
+  await loadSettings();
+
+  showSection('dashboard');
+
+  // Start polling dashboard immediately, then every 5 minutes
+  updateDashboard();
+  setInterval(updateDashboard, AppState.refreshInterval);
 }
 
-// =========================
-// CHART UPDATE
-// =========================
-function updateCharts(data) {
-    const time = new Date().toLocaleTimeString();
-
-    turbidityChart.data.labels.push(time);
-    turbidityChart.data.datasets[0].data.push(data.turbidity);
-
-    phChart.data.labels.push(time);
-    phChart.data.datasets[0].data.push(data.ph);
-
-    if (turbidityChart.data.labels.length > 10) {
-        turbidityChart.data.labels.shift();
-        turbidityChart.data.datasets[0].data.shift();
-        phChart.data.labels.shift();
-        phChart.data.datasets[0].data.shift();
-    }
-
-    turbidityChart.update();
-    phChart.update();
-}
-
-// =========================
-// AUTO REFRESH
-// =========================
-setInterval(updateDashboard, 5000);
+document.addEventListener('DOMContentLoaded', boot);

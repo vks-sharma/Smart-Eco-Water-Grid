@@ -1,6 +1,6 @@
 'use strict';
 
-const { analyzeWaterQuality } = require('./path/to/your/module');
+const { analyzeWaterQuality } = require('./decision');
 
 describe('analyzeWaterQuality', () => {
     test('should return "safe" for safe inputs', () => {

@@ -13,212 +13,141 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <link rel="stylesheet" href="styles.css">
-
-<style>
-body {
-    margin: 0;
-    display: flex;
-    font-family: Arial;
-}
-
-/* SIDEBAR */
-.sidebar {
-    width: 220px;
-    background: #0a2540;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100vh;
-}
-
-.sidebar-top {
-    padding: 20px;
-}
-
-.sidebar a {
-    display: block;
-    padding: 10px;
-    cursor: pointer;
-    border-radius: 6px;
-}
-
-.sidebar a:hover {
-    background: rgba(255,255,255,0.1);
-}
-
-.sidebar-bottom {
-    padding: 15px;
-}
-
-/* MAIN */
-.main {
-    flex: 1;
-    padding: 20px;
-    background: #f5f9fc;
-}
-
-/* HEADER */
-.header h1 { margin: 0; }
-.header p { color: gray; }
-
-/* DASHBOARD */
-.dashboard {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin: 20px 0;
-}
-
-.card {
-    background: white;
-    padding: 15px;
-    flex: 1 1 150px;
-    border-radius: 10px;
-}
-
-/* MAP */
-#deploymentMap {
-    height: 400px;
-    border-radius: 10px;
-}
-
-/* SECTIONS */
-.section { display: none; }
-
-/* DARK MODE */
-.dark-mode {
-    background: #0f172a;
-    color: white;
-}
-
-.dark-mode .main {
-    background: #0f172a;
-}
-
-.dark-mode .card {
-    background: #1e293b;
-}
-
-.dark-mode .sidebar {
-    background: #020617;
-}
-</style>
 </head>
 
 <body>
 
 <!-- SIDEBAR -->
 <div class="sidebar">
-    <div class="sidebar-top">
-        <h3>Smart Eco-Water Grid</h3>
-
-        <a onclick="showSection('dashboard')">Dashboard</a>
-        <a onclick="showSection('deployment')" id="deploymentBtn">Deployment</a>
-        <a onclick="showSection('settings')">Settings</a>
-    </div>
-
-    <div class="sidebar-bottom">
-        <div id="userName">Guest</div>
-        <a onclick="logout()">Logout</a>
-    </div>
+  <div class="sidebar-top">
+    <h3>💧 Smart Eco-Water Grid</h3>
+    <a data-section="dashboard"  onclick="showSection('dashboard')">📊 Dashboard</a>
+    <a data-section="deployment" onclick="showSection('deployment')">🗺 Deployment</a>
+    <a data-section="settings"   onclick="showSection('settings')">⚙️ Settings</a>
+  </div>
+  <div class="sidebar-bottom">
+    <div id="userName" class="sidebar-username">Guest</div>
+    <a id="loginBtn"  onclick="openLoginModal()">🔑 Login</a>
+    <a id="logoutBtn" onclick="doLogout()" style="display:none">🚪 Sign Out</a>
+  </div>
 </div>
 
 <!-- MAIN -->
 <div class="main">
 
-    <!-- HEADER -->
-    <div class="header">
+  <!-- HEADER -->
+  <div class="header">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
         <h1>Smart Eco-Water Grid</h1>
         <p>Nature-Based Wastewater Treatment Grid</p>
+      </div>
+      <button onclick="toggleTheme()" id="themeBtn" class="theme-btn">🌙</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="section">
+    <h2>Dashboard</h2>
+
+    <div class="dashboard">
+      <div class="card" onclick="openParamModal('ph')" title="Click to see full history">
+        <h3>pH <span class="card-hint">▶</span></h3>
+        <p id="phValue" class="card-value">--</p>
+      </div>
+      <div class="card" onclick="openParamModal('turbidity')" title="Click to see full history">
+        <h3>Turbidity <span class="card-hint">▶</span></h3>
+        <p id="turbidityValue" class="card-value">--</p>
+      </div>
+      <div class="card" onclick="openParamModal('temperature')" title="Click to see full history">
+        <h3>Temperature <span class="card-hint">▶</span></h3>
+        <p id="tempValue" class="card-value">--</p>
+      </div>
+      <div class="card" onclick="openParamModal('dissolvedOxygen')" title="Click to see full history">
+        <h3>Dissolved O₂ <span class="card-hint">▶</span></h3>
+        <p id="doValue" class="card-value">--</p>
+      </div>
+      <div class="card">
+        <h3>Status</h3>
+        <p id="statusValue" class="card-value">--</p>
+      </div>
     </div>
 
-    <!-- DASHBOARD -->
-    <div id="dashboard" class="section">
+    <div id="dashboardAlerts"></div>
 
-        <div style="display:flex; justify-content:space-between;">
-            <h2>Dashboard</h2>
-            <button onclick="toggleTheme()" id="themeBtn">🌙</button>
-        </div>
-
-        <!-- CARDS -->
-        <div class="dashboard">
-            <div class="card"><h3>pH</h3><p id="phValue">--</p></div>
-            <div class="card"><h3>Turbidity</h3><p id="turbidityValue">--</p></div>
-            <div class="card"><h3>Temperature</h3><p id="tempValue">--</p></div>
-            <div class="card"><h3>Dissolved Oxygen</h3><p id="doValue">--</p></div>
-            <div class="card"><h3>Status</h3><p id="statusValue">--</p></div>
-        </div>
-
-        <!-- ALERTS -->
-        <div id="dashboardAlerts"></div>
-
-        <!-- GRAPHS -->
-        <canvas id="turbidityChart"></canvas>
-        <canvas id="phChart" style="margin-top:20px;"></canvas>
-
+    <div class="charts-row">
+      <canvas id="turbidityChart"></canvas>
+      <canvas id="phChart"></canvas>
     </div>
+  </div>
 
-    <!-- DEPLOYMENT -->
-    <div id="deployment" class="section">
-        <div id="notificationPanel"></div>
-        <div id="deploymentMap"></div>
-
-        <div id="aiPanel">
-            <h3>AI Recommendations</h3>
-            <ul id="aiList"></ul>
-        </div>
+  <!-- DEPLOYMENT -->
+  <div id="deployment" class="section">
+    <h2>Deployment Map</h2>
+    <p class="section-hint">Click a node on the map to view its live dashboard.</p>
+    <div id="notificationPanel"></div>
+    <div id="deploymentMap"></div>
+    <div id="aiPanel">
+      <h3>🤖 AI Recommendations</h3>
+      <ul id="aiList"></ul>
     </div>
+  </div>
 
-    <!-- SETTINGS -->
-    <div id="settings" class="section">
-        <h3>Settings</h3>
-        <p>Login required to modify dataset (future feature)</p>
-    </div>
+  <!-- SETTINGS -->
+  <div id="settings" class="section">
+    <h2>Settings — Alert Thresholds</h2>
+    <p id="settingsGuestNote" class="guest-note">
+      🔒 You are viewing as Guest. <a onclick="openLoginModal()" class="link-btn">Login</a> as admin to save changes.
+    </p>
+    <div id="thresholdForm"></div>
+    <button id="saveSettingsBtn" onclick="saveSettings()" class="btn-primary" disabled>
+      �� Save Thresholds
+    </button>
+  </div>
 
 </div>
 
+<!-- NODE PANEL (slide-in) -->
+<div id="nodePanel" class="node-panel" style="display:none">
+  <div class="node-panel-header">
+    <h3 id="nodePanelTitle">Node</h3>
+    <button onclick="closeNodePanel()" class="close-btn">✕</button>
+  </div>
+  <div id="nodePanelBody"></div>
+</div>
+
+<!-- CHART MODAL -->
+<dialog id="chartModal" class="chart-modal">
+  <div class="modal-header">
+    <h3 id="chartModalTitle">Chart</h3>
+    <button onclick="closeChartModal()" class="close-btn">✕</button>
+  </div>
+  <canvas id="modalChartCanvas"></canvas>
+</dialog>
+
+<!-- LOGIN MODAL -->
+<dialog id="loginModal" class="login-modal">
+  <div class="modal-header">
+    <h3>Login</h3>
+    <button onclick="closeLoginModal()" class="close-btn">✕</button>
+  </div>
+  <form id="loginForm" onsubmit="submitLogin(event)">
+    <label for="loginUsername">Username</label>
+    <input id="loginUsername" type="text" autocomplete="username" required>
+    <label for="loginPassword">Password</label>
+    <input id="loginPassword" type="password" autocomplete="current-password" required>
+    <p id="loginError" class="form-error"></p>
+    <button type="submit" class="btn-primary">Login</button>
+  </form>
+</dialog>
+
+<!-- Scripts (order matters: state first, then modules, then app) -->
+<script src="state.js"></script>
+<script src="auth.js"></script>
+<script src="charts.js"></script>
+<script src="settings.js"></script>
+<script src="nodePanel.js"></script>
 <script src="app.js"></script>
-
-<script>
-// Section switching
-function showSection(id) {
-    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-
-    if (id === 'deployment') {
-        setTimeout(() => {
-            if (!window.mapInitialized) {
-                initMap();
-                window.mapInitialized = true;
-            }
-        }, 200);
-    }
-
-    if (id === 'dashboard') {
-        if (!window.chartInitialized) {
-            initCharts();
-            window.chartInitialized = true;
-        }
-    }
-}
-
-// Theme toggle
-function toggleTheme() {
-    document.body.classList.toggle("dark-mode");
-    const btn = document.getElementById("themeBtn");
-    btn.innerText = document.body.classList.contains("dark-mode") ? "☀️" : "🌙";
-}
-
-// Logout
-function logout() {
-    document.getElementById("userName").innerText = "Guest";
-    alert("Logged out. Login required for settings.");
-}
-
-// Default section
-showSection('dashboard');
-</script>
 
 </body>
 </html>

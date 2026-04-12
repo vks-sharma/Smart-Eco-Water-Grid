@@ -1,117 +1,148 @@
-let history = [];
+'use strict';
 
 const express = require('express');
-const cors = require('cors');
-const path = require('path');
+const cors    = require('cors');
+const path    = require('path');
+const fs      = require('fs');
 
-const app = express();
-const PORT = 3000;
+const app  = express();
+const PORT = process.env.PORT || 3000;
 
-// Middleware
+// ── Middleware ─────────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
-
-// Serve static frontend files
 app.use(express.static(path.join(__dirname, 'frontend')));
 
-// In-memory store for the latest water data
-let latestData = null;
+// ── Per-node history (Map<sensorId, reading[]>) ────────────────────────────────
+const NODE_HISTORY_CAP = 288; // 24 h at 5-min intervals
+const nodeHistory = new Map();  // sensorId → reading[]
+app.locals.nodeHistory = nodeHistory;
 
-/**
- * Water quality logic
- */
-function analyzeWaterQuality(ph, turbidity) {
-  if (ph < 6.5 || ph > 8.5 || turbidity > 10) {
-    return { status: 'unsafe', action: 're-treat' };
+// Latest reading per node
+const latestByNode = new Map(); // sensorId → reading
+
+// ── Load node config ───────────────────────────────────────────────────────────
+const NODES_FILE = path.join(__dirname, 'confg/nodes.json');
+let nodesConfig = JSON.parse(fs.readFileSync(NODES_FILE, 'utf8'));
+const deploymentNodes = nodesConfig.nodes;
+const deploymentLinks = nodesConfig.links;
+
+// ── Thresholds helper ──────────────────────────────────────────────────────────
+const { loadThresholds } = require('./routes/settings');
+
+function classifyParam(param, value) {
+  if (value == null) return 'unknown';
+  const th = loadThresholds()[param];
+  if (!th) return 'unknown';
+  const { safe, moderate, unsafe } = th;
+  // Check unsafe first
+  if (unsafe) {
+    if (unsafe.min != null && value >= unsafe.min) return 'unsafe';
+    if (unsafe.max != null && value <= unsafe.max) return 'unsafe';
   }
+  // Check safe range
+  const safeMin = safe && safe.min != null ? safe.min : -Infinity;
+  const safeMax = safe && safe.max != null ? safe.max : Infinity;
+  if (value >= safeMin && value <= safeMax) return 'safe';
+  // Otherwise moderate
+  return 'moderate';
+}
 
-  if (turbidity > 5) {
-    return { status: 'moderate', action: 'irrigation' };
-  }
-
+function analyzeWaterQuality(reading) {
+  const params = ['ph', 'turbidity', 'temperature', 'dissolvedOxygen', 'conductivity'];
+  const statuses = params.map(p => classifyParam(p, reading[p]));
+  if (statuses.includes('unsafe'))   return { status: 'unsafe',   action: 're-treat' };
+  if (statuses.includes('moderate')) return { status: 'moderate', action: 'irrigation' };
   return { status: 'safe', action: 'reuse' };
 }
 
+// ── Routes ─────────────────────────────────────────────────────────────────────
+app.use('/auth',     require('./routes/auth'));
+app.use('/settings', require('./routes/settings').router);
+app.use('/nodes',    require('./routes/nodes'));
+
 // POST /sensor-data
 app.post('/sensor-data', (req, res) => {
-  const { ph, turbidity, sensorId, timestamp } = req.body;
+  const { ph, turbidity, sensorId, timestamp, temperature, dissolvedOxygen, conductivity, tds } = req.body;
 
-  // Validation
   if (ph === undefined || turbidity === undefined) {
     return res.status(400).json({ error: 'Both ph and turbidity fields are required.' });
   }
-
   if (typeof ph !== 'number' || typeof turbidity !== 'number') {
     return res.status(400).json({ error: 'ph and turbidity must be numbers.' });
   }
-
   if (ph < 0 || ph > 14) {
     return res.status(400).json({ error: 'ph must be between 0 and 14.' });
   }
-
   if (turbidity < 0) {
     return res.status(400).json({ error: 'turbidity must be 0 or greater.' });
   }
 
-  // Analyze
-  const { status, action } = analyzeWaterQuality(ph, turbidity);
-
-  // Store latest data
-  latestData = {
-    sensorId: sensorId || "sensor-unknown",
+  const reading = {
+    sensorId:        sensorId || 'sensor-unknown',
     ph,
     turbidity,
-    status,
-    action,
-    timestamp: timestamp || new Date().toISOString()
+    temperature:     temperature     || null,
+    dissolvedOxygen: dissolvedOxygen || null,
+    conductivity:    conductivity    || null,
+    tds:             tds             || null,
+    timestamp:       timestamp       || new Date().toISOString(),
   };
 
-  // Store history
-  history.push(latestData);
-  if (history.length > 50) history.shift();
+  const { status, action } = analyzeWaterQuality(reading);
+  reading.status = status;
+  reading.action = action;
 
-  return res.status(200).json(latestData);
+  // Per-node history
+  const id = reading.sensorId;
+  if (!nodeHistory.has(id)) nodeHistory.set(id, []);
+  const hist = nodeHistory.get(id);
+  hist.push(reading);
+  if (hist.length > NODE_HISTORY_CAP) hist.shift();
+
+  latestByNode.set(id, reading);
+
+  return res.status(200).json(reading);
 });
 
-// GET latest data
+// GET /latest-data  (returns most recent reading across all nodes, or specific node)
 app.get('/latest-data', (req, res) => {
-  if (!latestData) {
-    return res.status(404).json({ error: 'No data available yet. Submit sensor data first.' });
+  const { nodeId } = req.query;
+  if (nodeId) {
+    const data = latestByNode.get(nodeId);
+    if (!data) return res.status(404).json({ error: 'No data for that node yet.' });
+    return res.status(200).json(data);
   }
-  return res.status(200).json(latestData);
+  // Return latest across all nodes (last inserted)
+  let latest = null;
+  for (const reading of latestByNode.values()) {
+    if (!latest || reading.timestamp > latest.timestamp) latest = reading;
+  }
+  if (!latest) return res.status(404).json({ error: 'No data available yet. Submit sensor data first.' });
+  return res.status(200).json(latest);
 });
 
-// GET history (NEW)
+// GET /history
 app.get('/history', (req, res) => {
-  return res.status(200).json(history);
+  const { nodeId, limit } = req.query;
+  const cap = parseInt(limit, 10) || 50;
+  if (nodeId) {
+    return res.status(200).json((nodeHistory.get(nodeId) || []).slice(-cap));
+  }
+  // Flatten all
+  const all = [];
+  for (const hist of nodeHistory.values()) all.push(...hist);
+  all.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+  return res.status(200).json(all.slice(-cap));
 });
 
-// ─── Deployment Map ──────────────────────────────────────────────────────────
+// ── Deployment Map ─────────────────────────────────────────────────────────────
 
-// In-memory deployment state (demo — no database required)
-const deploymentNodes = [
-  { id: 'H1', type: 'house',   name: 'Cluster A (Houses)',  lat: 27.5004, lng: 77.6637, flow: 0.60, quality: 0.80 },
-  { id: 'H2', type: 'house',   name: 'Cluster B (Houses)',  lat: 27.4954, lng: 77.6857, flow: 0.50, quality: 0.78 },
-  { id: 'H3', type: 'house',   name: 'Cluster C (Houses)',  lat: 27.4864, lng: 77.6777, flow: 0.40, quality: 0.82 },
-  { id: 'W1', type: 'wetland', name: 'Wetland STP 1',       lat: 27.4974, lng: 77.6727, flow: 0.70, quality: 0.72, capacity: 0.75 },
-  { id: 'W2', type: 'wetland', name: 'Wetland STP 2',       lat: 27.4904, lng: 77.6757, flow: 0.60, quality: 0.76, capacity: 0.70 },
-  { id: 'W3', type: 'wetland', name: 'Wetland STP 3',       lat: 27.4849, lng: 77.6657, flow: 0.55, quality: 0.80, capacity: 0.65 },
-];
-
-const deploymentLinks = [
-  { id: 'L1', from: 'H1', to: 'W1', status: 'open', flow: 0.60 },
-  { id: 'L2', from: 'H2', to: 'W2', status: 'open', flow: 0.50 },
-  { id: 'L3', from: 'H3', to: 'W2', status: 'open', flow: 0.40 },
-  { id: 'L4', from: 'W1', to: 'W2', status: 'open', flow: 0.45 },
-  { id: 'L5', from: 'W2', to: 'W3', status: 'open', flow: 0.35 },
-];
-
-/** Generate AI recommendations from current node state */
 function generateAiRecommendations() {
   const recs = [];
   for (const node of deploymentNodes) {
     if (node.type !== 'wetland') continue;
-    if (node.capacity !== null && node.capacity !== undefined && node.flow > node.capacity) {
+    if (node.capacity != null && node.flow > node.capacity) {
       recs.push(`${node.name}: Flow exceeds capacity — throttle upstream inflow and open alternate route.`);
     }
     if (node.quality < 0.70) {
@@ -124,12 +155,10 @@ function generateAiRecommendations() {
   return recs;
 }
 
-// GET /deployment-status — returns real-time node/link state + AI recommendations
 app.get('/deployment-status', (req, res) => {
-  // Simulate small real-time fluctuations in flow and quality
   for (const node of deploymentNodes) {
-    node.flow    = Math.min(1, Math.max(0,   node.flow    + (Math.random() - 0.5) * 0.05));
-    node.quality = Math.min(1, Math.max(0,   node.quality + (Math.random() - 0.5) * 0.03));
+    node.flow    = Math.min(1, Math.max(0, node.flow    + (Math.random() - 0.5) * 0.05));
+    node.quality = Math.min(1, Math.max(0, node.quality + (Math.random() - 0.5) * 0.03));
   }
   for (const link of deploymentLinks) {
     if (link.status === 'open') {
@@ -137,15 +166,14 @@ app.get('/deployment-status', (req, res) => {
     }
   }
 
-  // Build alerts
   const alerts = [];
   for (const node of deploymentNodes) {
     if (node.type !== 'wetland') continue;
-    if (node.capacity !== null && node.capacity !== undefined && node.flow > node.capacity) {
+    if (node.capacity != null && node.flow > node.capacity) {
       alerts.push({ nodeId: node.id, type: 'capacity', message: `${node.name} over capacity` });
     }
     if (node.quality < 0.65) {
-      alerts.push({ nodeId: node.id, type: 'quality',  message: `${node.name} quality low` });
+      alerts.push({ nodeId: node.id, type: 'quality', message: `${node.name} quality low` });
     }
   }
 
@@ -158,40 +186,26 @@ app.get('/deployment-status', (req, res) => {
   });
 });
 
-// POST /deployment-control — operator action on a specific link
 app.post('/deployment-control', (req, res) => {
   const { linkId, action } = req.body;
-
   if (!linkId || !action) {
     return res.status(400).json({ error: 'linkId and action are required.' });
   }
-
   const validActions = ['stop', 'transfer', 'retain'];
   if (!validActions.includes(action)) {
     return res.status(400).json({ error: `action must be one of: ${validActions.join(', ')}` });
   }
-
   const link = deploymentLinks.find(l => l.id === linkId);
-  if (!link) {
-    return res.status(404).json({ error: `Link ${linkId} not found.` });
-  }
+  if (!link) return res.status(404).json({ error: `Link ${linkId} not found.` });
 
-  // Apply the chosen operator action
-  if (action === 'stop') {
-    link.status = 'closed';
-    link.flow   = 0;
-  } else if (action === 'transfer') {
-    link.status = 'open';
-    link.flow   = Math.max(0.5, link.flow);
-  } else if (action === 'retain') {
-    link.status = 'throttled';
-    link.flow   = Math.min(0.3, link.flow);
-  }
+  if (action === 'stop')           { link.status = 'closed';    link.flow = 0; }
+  else if (action === 'transfer')  { link.status = 'open';      link.flow = Math.max(0.5, link.flow); }
+  else if (action === 'retain')    { link.status = 'throttled'; link.flow = Math.min(0.3, link.flow); }
 
   return res.status(200).json({ link, message: `Action '${action}' applied to link ${linkId}.` });
 });
 
-// Start server
+// ── Start ──────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`Smart Eco-Water Grid API running on http://localhost:${PORT}`);
 });

@@ -11,8 +11,11 @@ function generateSensorData() {
     sensorId: SENSOR_ID,
     timestamp: new Date().toISOString(),
     ph: 6.5 + (Math.random() - 0.5) * 1.5, // pH range: 5.75 - 7.25
-    turbidity: 10 + Math.random() * 20, // Turbidity: 10-30 NTU
-    temperature: 20 + (Math.random() - 0.5) * 8, // Temperature: 16-24°C
+
+    // ✅ FIXED TURBIDITY RANGE
+    turbidity: Math.random() * 15, // 0–15 NTU (safe + moderate + unsafe)
+
+    temperature: 20 + (Math.random() - 0.5) * 8,
   };
 }
 
@@ -23,7 +26,7 @@ function sendSensorData() {
   const options = {
     hostname: new URL(BACKEND_URL).hostname,
     port: new URL(BACKEND_URL).port || (BACKEND_URL.includes('https') ? 443 : 80),
-    path: '/api/sensor-data',
+    path: '/sensor-data',
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -33,9 +36,6 @@ function sendSensorData() {
 
   const req = http.request(options, (res) => {
     console.log(`[${new Date().toISOString()}] Response status: ${res.statusCode}`);
-    res.on('data', (chunk) => {
-      // Handle response data if needed
-    });
   });
 
   req.on('error', (error) => {

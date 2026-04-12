@@ -1,7 +1,7 @@
 const http = require('http');
 
 // Configuration
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 const SENSOR_ID = process.env.SENSOR_ID || 'sensor-01';
 const INTERVAL = 5000; // 5 seconds
 

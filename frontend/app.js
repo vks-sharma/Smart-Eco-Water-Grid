@@ -11,12 +11,12 @@ let currentNodes = [];
 // =========================
 function showSection(id) {
   document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-  document.querySelectorAll('.sidebar a[data-section]').forEach(a => a.classList.remove('active'));
+  document.querySelectorAll('.nav-item[data-section]').forEach(a => a.classList.remove('active'));
 
   const section = document.getElementById(id);
   if (section) section.style.display = 'block';
 
-  const navLink = document.querySelector(`.sidebar a[data-section="${id}"]`);
+  const navLink = document.querySelector(`.nav-item[data-section="${id}"]`);
   if (navLink) navLink.classList.add('active');
 
   if (id === 'deployment') {
@@ -41,8 +41,18 @@ function showSection(id) {
 function toggleTheme() {
   const isDark = !AppState.darkMode;
   AppState.setDarkMode(isDark);
+  _updateThemeBtn(isDark);
+}
+
+function _updateThemeBtn(isDark) {
   const btn = document.getElementById('themeBtn');
-  if (btn) btn.innerText = isDark ? '☀️' : '🌙';
+  if (!btn) return;
+  const icon = btn.querySelector('i');
+  if (icon) {
+    icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  } else {
+    btn.innerText = isDark ? '☀️' : '🌙';
+  }
 }
 
 // =========================
@@ -356,8 +366,7 @@ async function boot() {
   updateAuthUI();
 
   // Apply saved dark mode button state
-  const themeBtn = document.getElementById('themeBtn');
-  if (themeBtn) themeBtn.innerText = AppState.darkMode ? '☀️' : '🌙';
+  _updateThemeBtn(AppState.darkMode);
 
   // Load thresholds first so card colouring is available
   await loadSettings();

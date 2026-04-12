@@ -4,10 +4,19 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const fs = require('fs');
+const rateLimit = require('express-rate-limit');
 const { JWT_SECRET } = require('../middleware/auth');
 
 const router = express.Router();
 const USERS_FILE = path.join(__dirname, '../confg/users.json');
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Please try again later.' },
+});
 
 function loadUsers() {
   try {
@@ -18,7 +27,7 @@ function loadUsers() {
 }
 
 // POST /auth/login
-router.post('/login', (req, res) => {
+router.post('/login', loginLimiter, (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'username and password are required.' });

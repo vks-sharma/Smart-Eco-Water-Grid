@@ -2,11 +2,20 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const rateLimit = require('express-rate-limit');
 const { requireAuth } = require('../middleware/auth');
 const { waterQualityThresholds } = require('../confg/constants');
 
 const router = express.Router();
 const THRESHOLDS_FILE = path.join(__dirname, '../confg/thresholds.json');
+
+const settingsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please try again later.' },
+});
 
 function loadThresholds() {
   try {
@@ -24,12 +33,12 @@ function loadThresholds() {
 }
 
 // GET /settings/thresholds
-router.get('/thresholds', (req, res) => {
+router.get('/thresholds', settingsLimiter, (req, res) => {
   return res.status(200).json(loadThresholds());
 });
 
 // PUT /settings/thresholds  (admin only)
-router.put('/thresholds', requireAuth, (req, res) => {
+router.put('/thresholds', settingsLimiter, requireAuth, (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin role required.' });
   }

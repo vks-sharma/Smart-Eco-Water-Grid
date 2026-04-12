@@ -3,6 +3,11 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'sewg-dev-secret-change-in-prod';
 
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET environment variable must be set in production.');
+  process.exit(1);
+}
+
 /**
  * Middleware: require a valid JWT. Returns 401 if missing/invalid.
  */

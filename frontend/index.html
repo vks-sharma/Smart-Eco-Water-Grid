@@ -1,3 +1,69 @@
-<h2>Smart Eco Water Grid</h2>
-<div class="header-banner-glass">Nature-Based Wastewater Treatment Grid</div>
-<!-- Other contents of the file remain unchanged -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Eco Water Grid</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Premium glass header styling */
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Sidebar dropdown styling */
+        .sidebar {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .profile-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        .profile-dropdown:hover .profile-dropdown-content {
+            display: block;
+        }
+
+        .logout {
+            color: red;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Smart Eco Water Grid</h1>
+    </div>
+
+    <div class="sidebar">
+        <div class="profile-dropdown">
+            <button>Profile</button>
+            <div class="profile-dropdown-content">
+                <a href="#">Profile Settings</a>
+                <div class="logout">Logout</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add any required JavaScript here
+    </script>
+</body>
+</html>

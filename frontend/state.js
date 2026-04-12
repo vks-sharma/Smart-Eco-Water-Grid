@@ -29,7 +29,6 @@ const AppState = {
     this.darkMode = on;
     localStorage.setItem('darkMode', on);
     document.documentElement.classList.toggle('dark-mode', on);
-    document.body.classList.toggle('dark-mode', on);
   },
 
   login(username, role, token) {

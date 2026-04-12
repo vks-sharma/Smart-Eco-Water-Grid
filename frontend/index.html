@@ -21,6 +21,17 @@
             --hist-stripe: #f8f9fa;
             --input-bg: #ffffff;
             --shadow: 0 10px 30px rgba(0,0,0,0.15);
+
+            /* Layout theme */
+            --shell-bg: rgba(255,255,255,0.14);
+            --sidebar-bg: rgba(255,255,255,0.92);
+            --sidebar-text: #0f172a;
+            --sidebar-muted: #475569;
+            --sidebar-border: rgba(15, 23, 42, 0.08);
+            --sidebar-active: rgba(37, 99, 235, 0.12);
+            --primary: #2563eb;
+            --primary-2: #1d4ed8;
+            --topbar-bg: rgba(255,255,255,0.20);
         }
         [data-theme="dark"] {
             --bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
@@ -35,6 +46,16 @@
             --hist-stripe: #253347;
             --input-bg: #2d3748;
             --shadow: 0 10px 30px rgba(0,0,0,0.4);
+
+            --shell-bg: rgba(0,0,0,0.20);
+            --sidebar-bg: rgba(15,23,42,0.92);
+            --sidebar-text: #e2e8f0;
+            --sidebar-muted: #94a3b8;
+            --sidebar-border: rgba(148,163,184,0.14);
+            --sidebar-active: rgba(96, 165, 250, 0.16);
+            --primary: #60a5fa;
+            --primary-2: #3b82f6;
+            --topbar-bg: rgba(0,0,0,0.18);
         }
 
         /* ── Reset ───────────────────────────────────────────────────────────── */
@@ -48,20 +69,187 @@
             transition: background 0.4s;
         }
 
-        .container { max-width: 1280px; margin: 0 auto; }
+        /* ── App shell layout ────────────────────────────────────────────────── */
+        .app-shell {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 18px;
+            align-items: start;
+        }
 
-        /* ── Header ──────────────────────────────────────────────────────────── */
-        .header {
+        /* Sidebar */
+        .sidebar {
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            background: var(--sidebar-bg);
+            border: 1px solid var(--sidebar-border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-header {
+            padding: 18px 18px 14px;
+            border-bottom: 1px solid var(--sidebar-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .brand-badge {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+            color: white;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .brand-text h2 {
+            font-size: 1rem;
+            color: var(--sidebar-text);
+            line-height: 1.15;
+        }
+        .brand-text p {
+            margin-top: 2px;
+            font-size: 0.78rem;
+            color: var(--sidebar-muted);
+        }
+
+        .nav {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .nav button {
+            width: 100%;
+            text-align: left;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--sidebar-text);
+            padding: 10px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+        }
+        .nav button:hover {
+            background: rgba(37, 99, 235, 0.08);
+            transform: translateY(-1px);
+        }
+        .nav button[aria-current="page"] {
+            background: var(--sidebar-active);
+            border-color: rgba(37, 99, 235, 0.22);
+        }
+        .nav .icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            background: rgba(37, 99, 235, 0.10);
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+        [data-theme="dark"] .nav .icon {
+            background: rgba(96, 165, 250, 0.12);
+        }
+
+        .sidebar-spacer { flex: 1; }
+
+        .sidebar-profile {
+            padding: 14px 14px 16px;
+            border-top: 1px solid var(--sidebar-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #93c5fd, #2563eb);
+            display: grid;
+            place-items: center;
+            color: white;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+        }
+        .profile-meta {
+            min-width: 0;
+        }
+        .profile-meta .name {
+            font-weight: 900;
+            color: var(--sidebar-text);
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .profile-meta .role {
+            font-size: 0.78rem;
+            color: var(--sidebar-muted);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Main area */
+        .main {
+            background: var(--shell-bg);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 18px;
+            padding: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Top bar (replaces the previous full-width header) */
+        .topbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 12px;
             color: white;
-            margin-bottom: 24px;
+            margin-bottom: 18px;
+            padding: 14px 14px;
+            border-radius: 16px;
+            background: var(--topbar-bg);
+            border: 1px solid rgba(255,255,255,0.18);
+            backdrop-filter: blur(8px);
         }
-        .header-left h1 { font-size: 2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-        .header-left p  { font-size: 0.95rem; opacity: 0.9; margin-top: 4px; }
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .hamburger {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.18);
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.15s ease, opacity 0.2s;
+        }
+        .hamburger:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .topbar-title h1 { font-size: 1.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.25); }
+        .topbar-title p  { font-size: 0.9rem; opacity: 0.9; margin-top: 2px; }
+
         .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .live-clock { font-size: 1.1rem; font-weight: 600; opacity: 0.95; }
         .connection-badge {
@@ -202,7 +390,7 @@
         }
         .chart-wrapper { position: relative; height: 180px; }
 
-        /* ── Stats row ───────────────────────────────────────────────────────── */
+        /* ── Quick stats ─────────────────────────────────────────────────────── */
         .stats-section {
             background: var(--card-bg);
             border-radius: 16px;
@@ -253,7 +441,7 @@
         .badge-warning { background: #fff3cd; color: #856404; }
         .badge-danger  { background: #f8d7da; color: #721c24; }
 
-        /* ── Animations ──────────────────────────────────────────────────────── */
+        /* ── Animations ─────────────────────────────────────────────────────── */
         @keyframes valuePop {
             0%   { transform: scale(1);    color: inherit; }
             40%  { transform: scale(1.08); color: #667eea; }
@@ -270,14 +458,61 @@
             background: #667eea; animation: loadingPulse 1.4s ease-in-out infinite;
         }
 
-        /* ── Footer ──────────────────────────────────────────────────────────── */
+        /* ── Content sections ───────────────────────────────────────────────── */
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+
+        .section-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: var(--shadow);
+            transition: background 0.4s;
+        }
+        .section-card h2 {
+            color: var(--card-text);
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+        .section-card p { color: var(--muted); }
+
+        /* ── Footer ─────────────────────────────────────────────────────────── */
         .footer { text-align: center; color: white; padding: 18px; margin-top: 10px; }
         .footer p { font-size: 0.88rem; opacity: 0.88; }
         .footer-sub { font-size: 0.8rem; margin-top: 6px; opacity: 0.7; }
 
-        /* ── Responsive ──────────────────────────────────────────────────────── */
+        /* ── Responsive ─────────────────────────────────────────────────────── */
+        @media (max-width: 980px) {
+            .app-shell { grid-template-columns: 1fr; }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: min(320px, 86vw);
+                border-radius: 0;
+                z-index: 1000;
+                transform: translateX(-110%);
+                transition: transform 0.25s ease;
+            }
+            body.sidebar-open .sidebar { transform: translateX(0); }
+
+            .hamburger { display: inline-grid; place-items: center; }
+
+            .backdrop {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.4);
+                z-index: 999;
+            }
+            body.sidebar-open .backdrop { display: block; }
+
+            .main { padding: 12px; }
+        }
+
         @media (max-width: 640px) {
-            .header-left h1 { font-size: 1.4rem; }
+            .topbar-title h1 { font-size: 1.2rem; }
             .card-value { font-size: 2rem; }
             .btn-header { padding: 6px 10px; font-size: 0.76rem; }
         }
@@ -289,182 +524,304 @@
         <div class="spinner"></div>
     </div>
 
-    <div class="container">
+    <!-- Mobile sidebar backdrop -->
+    <div class="backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
-        <!-- ── Header ─────────────────────────────────────────────────────── -->
-        <div class="header">
-            <div class="header-left">
-                <h1>💧 Smart Eco Water Grid</h1>
-                <p>Real-time Water Quality Monitoring Dashboard</p>
-            </div>
-            <div class="header-right">
-                <span class="live-clock" id="liveClock">--:--:--</span>
-                <span class="connection-badge online" id="connectionStatus">● Connected</span>
-                <button class="btn-header btn-refresh" id="refreshBtn" title="Manually refresh data">🔄 Refresh</button>
-                <button class="btn-header btn-export" id="exportBtn" title="Export data to CSV">⬇️ Export CSV</button>
-                <button class="btn-header btn-clear" id="clearHistoryBtn" title="Clear all history">🗑️ Clear</button>
-                <button class="btn-header btn-dark" id="darkModeBtn" title="Toggle dark mode">🌙 Dark Mode</button>
-            </div>
-        </div>
-
-        <!-- ── Alert banner ───────────────────────────────────────────────── -->
-        <div class="alert-banner danger" id="alertBanner"></div>
-
-        <!-- ── Error message ──────────────────────────────────────────────── -->
-        <div id="errorMessage"></div>
-
-        <!-- ── Main metric cards ──────────────────────────────────────────── -->
-        <div class="dashboard">
-
-            <!-- pH Card -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon pH-icon">🧪</div>
-                    <h2 class="card-title">pH Level</h2>
-                </div>
-                <div class="card-value">
-                    <span id="phValue">--</span>
-                    <span class="card-unit">pH</span>
-                </div>
-                <span class="card-status status-good" id="phStatus">--</span>
-
-                <div class="progress-container">
-                    <div class="progress-label">
-                        <span>0</span>
-                        <span>Safe: 6.5–8.5</span>
-                        <span>14</span>
-                    </div>
-                    <div class="progress-track">
-                        <div class="progress-fill good" id="phProgressBar" style="width:0%"></div>
-                    </div>
+    <div class="app-shell">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar" aria-label="Primary">
+            <div class="sidebar-header">
+                <div class="brand-badge" aria-hidden="true">💧</div>
+                <div class="brand-text">
+                    <h2>Smart Eco Water Grid</h2>
+                    <p>Blue &amp; white control panel</p>
                 </div>
             </div>
 
-            <!-- Turbidity Card -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon turbidity-icon">💧</div>
-                    <h2 class="card-title">Turbidity</h2>
-                </div>
-                <div class="card-value">
-                    <span id="turbidityValue">--</span>
-                    <span class="card-unit">NTU</span>
-                </div>
-                <span class="card-status status-good" id="turbidityStatus">--</span>
+            <nav class="nav" aria-label="Menu">
+                <button type="button" class="nav-link" data-section="dashboard" aria-current="page">
+                    <span class="icon" aria-hidden="true">📊</span>
+                    <span>Dashboard</span>
+                </button>
+                <button type="button" class="nav-link" data-section="deployment">
+                    <span class="icon" aria-hidden="true">🚀</span>
+                    <span>Deployment</span>
+                </button>
+                <button type="button" class="nav-link" data-section="settings">
+                    <span class="icon" aria-hidden="true">⚙️</span>
+                    <span>Settings</span>
+                </button>
+            </nav>
 
-                <div class="progress-container">
-                    <div class="progress-label">
-                        <span>0</span>
-                        <span>Safe: 0–5 NTU</span>
-                        <span>20+</span>
-                    </div>
-                    <div class="progress-track">
-                        <div class="progress-fill good" id="turbProgressBar" style="width:0%"></div>
+            <div class="sidebar-spacer"></div>
+
+            <div class="sidebar-profile" aria-label="User profile">
+                <div class="avatar" aria-hidden="true">VS</div>
+                <div class="profile-meta">
+                    <div class="name" id="sidebarUserName">vks-sharma</div>
+                    <div class="role" id="sidebarUserRole">Operator</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main content -->
+        <main class="main">
+            <!-- Top bar -->
+            <div class="topbar">
+                <div class="topbar-left">
+                    <button class="hamburger" id="sidebarToggle" type="button" aria-label="Toggle sidebar" aria-expanded="false">☰</button>
+                    <div class="topbar-title">
+                        <h1>Smart Eco Water Grid</h1>
+                        <p id="sectionSubtitle">Real-time Water Quality Monitoring Dashboard</p>
                     </div>
                 </div>
+
+                <div class="header-right">
+                    <span class="live-clock" id="liveClock">--:--:--</span>
+                    <span class="connection-badge online" id="connectionStatus">● Connected</span>
+                    <button class="btn-header btn-refresh" id="refreshBtn" title="Manually refresh data">🔄 Refresh</button>
+                    <button class="btn-header btn-export" id="exportBtn" title="Export data to CSV">⬇️ Export CSV</button>
+                    <button class="btn-header btn-clear" id="clearHistoryBtn" title="Clear all history">🗑️ Clear</button>
+                    <button class="btn-header btn-dark" id="darkModeBtn" title="Toggle dark mode">🌙 Dark Mode</button>
+                </div>
             </div>
 
-            <!-- System Status Card -->
-            <div class="card" id="statusCard">
-                <div class="card-header">
-                    <div class="card-icon status-icon">📊</div>
-                    <h2 class="card-title">System Status</h2>
-                </div>
-                <div class="card-value">
-                    <span id="statusValue" style="font-size:1.6rem">--</span>
-                </div>
-                <span class="card-status status-good" id="systemStatus">--</span>
-                <br>
-                <span class="action-tag action-good" id="actionRecommendation">Waiting for data…</span>
-                <p style="font-size:0.78rem;color:var(--muted2);margin-top:10px;">
-                    <span class="loading-dot"></span> Updating every 3 s
-                </p>
-            </div>
-        </div>
+            <!-- ── Alert banner ───────────────────────────────────────────────── -->
+            <div class="alert-banner danger" id="alertBanner"></div>
 
-        <!-- ── Trend charts ────────────────────────────────────────────────── -->
-        <div class="charts-row">
-            <div class="chart-card">
-                <div class="chart-title">📈 pH Trend (last 20 readings)</div>
-                <div class="chart-wrapper">
-                    <canvas id="phChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-card">
-                <div class="chart-title">📈 Turbidity Trend (last 20 readings)</div>
-                <div class="chart-wrapper">
-                    <canvas id="turbidityChart"></canvas>
-                </div>
-            </div>
-        </div>
+            <!-- ── Error message ──────────────────────────────────────────────── -->
+            <div id="errorMessage"></div>
 
-        <!-- ── Quick stats ─────────────────────────────────────────────────── -->
-        <div class="stats-section">
-            <div class="section-title">⚡ Live Statistics</div>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-label">Current pH</div>
-                    <div class="stat-value" id="avgPh">--</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Min pH</div>
-                    <div class="stat-value" id="minPh">--</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Max pH</div>
-                    <div class="stat-value" id="maxPh">--</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Current Turbidity</div>
-                    <div class="stat-value" id="avgTurbidity">--</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Min Turbidity</div>
-                    <div class="stat-value" id="minTurbidity">--</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Max Turbidity</div>
-                    <div class="stat-value" id="maxTurbidity">--</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Data Points</div>
-                    <div class="stat-value" id="dataPoints">0</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Last Updated</div>
-                    <div class="stat-value" id="lastUpdate" style="font-size:1rem">--</div>
-                </div>
-            </div>
-        </div>
+            <!-- Sections -->
+            <section id="section-dashboard" class="content-section active" data-section="dashboard">
+                <!-- ── Main metric cards ──────────────────────────────────────────── -->
+                <div class="dashboard">
 
-        <!-- ── Data history panel ──────────────────────────────────────────── -->
-        <div class="history-section">
-            <div class="section-title">📋 Recent Readings (last 10)</div>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Time</th>
-                            <th>pH</th>
-                            <th>Turbidity (NTU)</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyBody">
-                        <tr><td colspan="5" style="text-align:center;color:#aaa;padding:20px;">Waiting for data…</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                    <!-- pH Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon pH-icon">🧪</div>
+                            <h2 class="card-title">pH Level</h2>
+                        </div>
+                        <div class="card-value">
+                            <span id="phValue">--</span>
+                            <span class="card-unit">pH</span>
+                        </div>
+                        <span class="card-status status-good" id="phStatus">--</span>
 
-        <!-- ── Footer ─────────────────────────────────────────────────────── -->
-        <div class="footer">
-            <p>💧 Smart Eco Water Grid — Sustainable Water Management System</p>
-            <p class="footer-sub">⏱️ Auto-refreshing every 3 seconds via /latest-data</p>
-        </div>
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span>0</span>
+                                <span>Safe: 6.5–8.5</span>
+                                <span>14</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill good" id="phProgressBar" style="width:0%"></div>
+                            </div>
+                        </div>
+                    </div>
 
-    </div><!-- /.container -->
+                    <!-- Turbidity Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon turbidity-icon">💧</div>
+                            <h2 class="card-title">Turbidity</h2>
+                        </div>
+                        <div class="card-value">
+                            <span id="turbidityValue">--</span>
+                            <span class="card-unit">NTU</span>
+                        </div>
+                        <span class="card-status status-good" id="turbidityStatus">--</span>
+
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span>0</span>
+                                <span>Safe: 0–5 NTU</span>
+                                <span>20+</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill good" id="turbProgressBar" style="width:0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Status Card -->
+                    <div class="card" id="statusCard">
+                        <div class="card-header">
+                            <div class="card-icon status-icon">📊</div>
+                            <h2 class="card-title">System Status</h2>
+                        </div>
+                        <div class="card-value">
+                            <span id="statusValue" style="font-size:1.6rem">--</span>
+                        </div>
+                        <span class="card-status status-good" id="systemStatus">--</span>
+                        <br>
+                        <span class="action-tag action-good" id="actionRecommendation">Waiting for data…</span>
+                        <p style="font-size:0.78rem;color:var(--muted2);margin-top:10px;">
+                            <span class="loading-dot"></span> Updating every 3 s
+                        </p>
+                    </div>
+                </div>
+
+                <!-- ── Trend charts ────────────────────────────────────────────────── -->
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <div class="chart-title">📈 pH Trend (last 20 readings)</div>
+                        <div class="chart-wrapper">
+                            <canvas id="phChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">📈 Turbidity Trend (last 20 readings)</div>
+                        <div class="chart-wrapper">
+                            <canvas id="turbidityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Quick stats ─────────────────────────────────────────────────── -->
+                <div class="stats-section">
+                    <div class="section-title">⚡ Live Statistics</div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Current pH</div>
+                            <div class="stat-value" id="avgPh">--</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Min pH</div>
+                            <div class="stat-value" id="minPh">--</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Max pH</div>
+                            <div class="stat-value" id="maxPh">--</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Current Turbidity</div>
+                            <div class="stat-value" id="avgTurbidity">--</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Min Turbidity</div>
+                            <div class="stat-value" id="minTurbidity">--</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Max Turbidity</div>
+                            <div class="stat-value" id="maxTurbidity">--</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Data Points</div>
+                            <div class="stat-value" id="dataPoints">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Last Updated</div>
+                            <div class="stat-value" id="lastUpdate" style="font-size:1rem">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Data history panel ──────────────────────────────────────────── -->
+                <div class="history-section">
+                    <div class="section-title">📋 Recent Readings (last 10)</div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>pH</th>
+                                    <th>Turbidity (NTU)</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyBody">
+                                <tr><td colspan="5" style="text-align:center;color:#aaa;padding:20px;">Waiting for data…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ── Footer ─────────────────────────────────────────────────────── -->
+                <div class="footer">
+                    <p>💧 Smart Eco Water Grid — Sustainable Water Management System</p>
+                    <p class="footer-sub">⏱️ Auto-refreshing every 3 seconds via /latest-data</p>
+                </div>
+            </section>
+
+            <section id="section-deployment" class="content-section" data-section="deployment">
+                <div class="section-card">
+                    <h2>Deployment</h2>
+                    <p>Use this area to show device provisioning, endpoint configuration, and deployment status.</p>
+                    <p style="margin-top:10px;color:var(--muted2);font-size:0.9rem;">(Placeholder section — wire to backend/deployment data when ready.)</p>
+                </div>
+            </section>
+
+            <section id="section-settings" class="content-section" data-section="settings">
+                <div class="section-card">
+                    <h2>Settings</h2>
+                    <p>Configure thresholds, refresh interval, theme, and user preferences here.</p>
+                    <p style="margin-top:10px;color:var(--muted2);font-size:0.9rem;">Tip: The existing Dark Mode button still works as before.</p>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        (function () {
+            const navLinks = Array.from(document.querySelectorAll('.nav-link'));
+            const sections = Array.from(document.querySelectorAll('.content-section'));
+            const subtitle = document.getElementById('sectionSubtitle');
+
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+            const sectionMeta = {
+                dashboard: 'Real-time Water Quality Monitoring Dashboard',
+                deployment: 'Manage deployments and device rollout',
+                settings: 'Tune system thresholds and preferences'
+            };
+
+            function setActiveSection(key) {
+                sections.forEach(s => s.classList.toggle('active', s.dataset.section === key));
+                navLinks.forEach(b => {
+                    const isActive = b.dataset.section === key;
+                    if (isActive) b.setAttribute('aria-current', 'page');
+                    else b.removeAttribute('aria-current');
+                });
+
+                if (subtitle) subtitle.textContent = sectionMeta[key] || '';   
+
+                // Close sidebar on mobile after navigation
+                document.body.classList.remove('sidebar-open');
+                if (sidebarToggle) sidebarToggle.setAttribute('aria-expanded', 'false');
+            }
+
+            navLinks.forEach(btn => {
+                btn.addEventListener('click', () => setActiveSection(btn.dataset.section));
+            });
+
+            function openSidebar() {
+                document.body.classList.add('sidebar-open');
+                if (sidebarToggle) sidebarToggle.setAttribute('aria-expanded', 'true');
+            }
+            function closeSidebar() {
+                document.body.classList.remove('sidebar-open');
+                if (sidebarToggle) sidebarToggle.setAttribute('aria-expanded', 'false');
+            }
+            function toggleSidebar() {
+                if (document.body.classList.contains('sidebar-open')) closeSidebar();
+                else openSidebar();
+            }
+
+            if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
+            if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', closeSidebar);
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeSidebar();
+            });
+
+            // Ensure default is dashboard
+            setActiveSection('dashboard');
+        })();
+    </script>
 
     <script src="app.js"></script>
 </body>

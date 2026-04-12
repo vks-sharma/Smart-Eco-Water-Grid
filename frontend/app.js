@@ -545,3 +545,279 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchData();
     setInterval(fetchData, REFRESH_INTERVAL);
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Deployment Map — Leaflet + OpenStreetMap tiles + /deployment-status API
+// ─────────────────────────────────────────────────────────────────────────────
+
+let deployMap        = null;  // Leaflet map instance (initialized once)
+let deployLayerLinks = null;  // Leaflet LayerGroup for polylines
+let deployLayerNodes = null;  // Leaflet LayerGroup for circle markers
+let deployActiveLink = null;  // Currently selected link id (for control panel)
+let deployPollTimer  = null;  // setInterval handle for deployment polling
+let deployInited     = false; // Tracks if buttons + first fetch have been wired
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function deploy$(id) { return document.getElementById(id); }
+
+/** Safely format a numeric value to 2 decimal places, returning '?' for non-numbers */
+function deployFmt(v) {
+    return typeof v === 'number' && isFinite(v) ? v.toFixed(2) : '?';
+}
+
+
+function deployNodeColor(node) {
+    if (node.type === 'house') return '#2563eb';
+    if (node.quality < 0.60)  return '#e11d48';   // bad
+    if (node.quality < 0.75)  return '#f59e0b';   // moderate
+    return '#10b981';                              // good
+}
+
+/** Color for a link polyline based on status */
+function deployLinkColor(link) {
+    if (link.status === 'closed')    return '#ef4444';
+    if (link.status === 'throttled') return '#f59e0b';
+    return '#22c55e'; // open
+}
+
+/** Polyline weight proportional to flow (0..1) */
+function deployLinkWeight(link) {
+    return 2 + Math.round((link.flow || 0) * 5);
+}
+
+// ── KPI / panel helpers ──────────────────────────────────────────────────────
+
+function deploySetKpis(nodes, links, alerts) {
+    const nc = deploy$('deployNodesCount');
+    const lc = deploy$('deployLinksCount');
+    const ac = deploy$('deployAlertsCount');
+    if (nc) nc.textContent = String(nodes.length);
+    if (lc) lc.textContent = String(links.length);
+    if (ac) ac.textContent = String((alerts || []).length);
+}
+
+function deploySetAiBox(recommendations) {
+    const box = deploy$('deployAiBox');
+    if (!box) return;
+    box.textContent = (recommendations || []).join('\n') || 'No recommendations.';
+}
+
+function deploySetSelection(text) {
+    const box = deploy$('deploySelection');
+    if (box) box.textContent = text;
+}
+
+function deployShowControls(linkId) {
+    deployActiveLink = linkId;
+    const cb = deploy$('deployControlBox');
+    if (cb) cb.style.display = '';
+    const cs = deploy$('deployControlStatus');
+    if (cs) cs.textContent = '';
+}
+
+function deployHideControls() {
+    deployActiveLink = null;
+    const cb = deploy$('deployControlBox');
+    if (cb) cb.style.display = 'none';
+}
+
+// ── Map layer rendering ──────────────────────────────────────────────────────
+
+function deployDrawLayers(nodes, links) {
+    if (!deployMap) return;
+
+    // Remove old layers
+    if (deployLayerLinks) { deployLayerLinks.clearLayers(); } else {
+        deployLayerLinks = L.layerGroup().addTo(deployMap);
+    }
+    if (deployLayerNodes) { deployLayerNodes.clearLayers(); } else {
+        deployLayerNodes = L.layerGroup().addTo(deployMap);
+    }
+
+    const nodeIndex = {};
+    nodes.forEach(n => { nodeIndex[n.id] = n; });
+
+    // Draw links (polylines)
+    links.forEach(link => {
+        const a = nodeIndex[link.from];
+        const b = nodeIndex[link.to];
+        if (!a || !b) return;
+
+        const poly = L.polyline([[a.lat, a.lng], [b.lat, b.lng]], {
+            color:   deployLinkColor(link),
+            weight:  deployLinkWeight(link),
+            opacity: 0.88
+        });
+
+        poly.bindTooltip(
+            `Link ${link.id}: ${link.from} → ${link.to} | status: ${link.status} | flow: ${deployFmt(link.flow)}`,
+            { sticky: true }
+        );
+
+        poly.on('click', () => {
+            deploySetSelection(
+                `Link ${link.id}\n` +
+                `${link.from} → ${link.to}\n` +
+                `Status: ${link.status}\n` +
+                `Flow: ${deployFmt(link.flow)}`
+            );
+            deployShowControls(link.id);
+        });
+
+        poly.addTo(deployLayerLinks);
+    });
+
+    // Draw nodes (circle markers)
+    nodes.forEach(node => {
+        const marker = L.circleMarker([node.lat, node.lng], {
+            radius:      node.type === 'wetland' ? 10 : 8,
+            color:       '#0f172a',
+            weight:      2,
+            fillColor:   deployNodeColor(node),
+            fillOpacity: 0.92
+        });
+
+        marker.bindTooltip(`${node.name} (${node.id})`, { direction: 'top' });
+
+        marker.on('click', () => {
+            const lines = [
+                `${node.name} (${node.id})`,
+                `Type: ${node.type}`,
+                `Flow: ${deployFmt(node.flow)}`,
+                `Quality: ${deployFmt(node.quality)}`
+            ];
+            if (node.type === 'wetland' && node.capacity !== null && node.capacity !== undefined) {
+                lines.push(`Capacity: ${deployFmt(node.capacity)}`);
+            }
+            deploySetSelection(lines.join('\n'));
+            deployHideControls();
+        });
+
+        marker.addTo(deployLayerNodes);
+    });
+}
+
+// ── API polling ───────────────────────────────────────────────────────────────
+
+async function fetchDeploymentStatus() {
+    try {
+        const res = await fetch('/deployment-status');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+
+        deployDrawLayers(data.nodes || [], data.links || []);
+        deploySetKpis(data.nodes || [], data.links || [], data.alerts || []);
+        deploySetAiBox((data.ai || {}).recommendations || []);
+
+        // Refresh the selected-link details if a link is still selected
+        if (deployActiveLink) {
+            const link = (data.links || []).find(l => l.id === deployActiveLink);
+            if (link) {
+                deploySetSelection(
+                    `Link ${link.id}\n` +
+                    `${link.from} → ${link.to}\n` +
+                    `Status: ${link.status}\n` +
+                    `Flow: ${deployFmt(link.flow)}`
+                );
+            }
+        }
+    } catch (err) {
+        console.warn('[Deployment] fetch error:', err);
+    }
+}
+
+// ── Operator control ──────────────────────────────────────────────────────────
+
+async function deployControl(action) {
+    if (!deployActiveLink) return;
+    const statusEl = deploy$('deployControlStatus');
+    if (statusEl) statusEl.textContent = `Applying '${action}'…`;
+
+    try {
+        const res = await fetch('/deployment-control', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ linkId: deployActiveLink, action })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Request failed');
+
+        if (statusEl) statusEl.textContent = data.message || 'Done.';
+        // Refresh map immediately after a control action
+        fetchDeploymentStatus();
+    } catch (err) {
+        if (statusEl) statusEl.textContent = `Error: ${err.message}`;
+    }
+}
+
+// ── Map initialisation (called once when section first becomes visible) ───────
+
+function initDeploymentMapIfNeeded() {
+    const mapEl = deploy$('deploymentMap');
+    if (!mapEl) return;
+
+    // Wire buttons and fetch data once
+    if (!deployInited) {
+        deployInited = true;
+
+        const refreshBtn = deploy$('deployRefreshBtn');
+        if (refreshBtn) refreshBtn.addEventListener('click', fetchDeploymentStatus);
+
+        const stopBtn     = deploy$('deployStopBtn');
+        const transferBtn = deploy$('deployTransferBtn');
+        const retainBtn   = deploy$('deployRetainBtn');
+        if (stopBtn)     stopBtn.addEventListener('click',     () => deployControl('stop'));
+        if (transferBtn) transferBtn.addEventListener('click', () => deployControl('transfer'));
+        if (retainBtn)   retainBtn.addEventListener('click',   () => deployControl('retain'));
+
+        // Fetch initial data regardless of Leaflet availability
+        fetchDeploymentStatus();
+    }
+
+    if (deployMap) return; // Leaflet map already initialised
+
+    if (typeof L === 'undefined') {
+        console.warn('[Deployment] Leaflet not loaded — map tiles will not render, but panel data will.');
+        return;
+    }
+
+    // Center near Mathura rural area; real center comes from the API on first poll
+    deployMap = L.map('deploymentMap', { zoomControl: true })
+                 .setView([27.4924, 77.6737], 13);
+
+    // OpenStreetMap tiles (no API key needed)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom:     19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(deployMap);
+}
+
+// ── Hook into sidebar navigation ─────────────────────────────────────────────
+// The inline script in index.html toggles .active on .content-section elements.
+// We watch for nav-link clicks on the deployment button and also observe class
+// changes so polling starts/stops based on visibility.
+
+document.addEventListener('click', e => {
+    const btn = e.target && e.target.closest && e.target.closest('.nav-link');
+    if (!btn) return;
+
+    if (btn.dataset.section === 'deployment') {
+        // Give the section a tick to become visible before sizing the map
+        setTimeout(() => {
+            initDeploymentMapIfNeeded();
+            if (deployMap) deployMap.invalidateSize(true);
+
+            // Start polling while deployment section is active
+            if (!deployPollTimer) {
+                deployPollTimer = setInterval(() => {
+                    const section = document.querySelector('#section-deployment');
+                    if (section && section.classList.contains('active')) {
+                        fetchDeploymentStatus();
+                    }
+                }, REFRESH_INTERVAL);
+            }
+        }, 50);
+    }
+});
+

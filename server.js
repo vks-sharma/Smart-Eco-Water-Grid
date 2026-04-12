@@ -49,15 +49,89 @@ function classifyParam(param, value) {
 }
 
 function analyzeWaterQuality(reading) {
-  const params = ['ph', 'turbidity', 'temperature', 'dissolvedOxygen', 'conductivity'];
+  const params = ['ph', 'turbidity', 'temperature', 'dissolvedOxygen', 'conductivity', 'tds'];
   const statuses = params.map(p => classifyParam(p, reading[p]));
   if (statuses.includes('unsafe'))   return { status: 'unsafe',   action: 're-treat' };
   if (statuses.includes('moderate')) return { status: 'moderate', action: 'irrigation' };
   return { status: 'safe', action: 'reuse' };
 }
 
-// ── Routes ─────────────────────────────────────────────────────────────────────
-app.use('/auth',     require('./routes/auth'));
+// ── Alert History ──────────────────────────────────────────────────────────────
+const alertHistory = [];
+const ALERT_HISTORY_CAP = 100;
+
+function recordAlert(type, nodeId, message) {
+  alertHistory.unshift({ type, nodeId, message, time: new Date().toISOString() });
+  if (alertHistory.length > ALERT_HISTORY_CAP) alertHistory.pop();
+}
+
+// ── Smart Auto-Routing ─────────────────────────────────────────────────────────
+// Called after each deployment-status drift update.
+// Implements overflow throttling, pollution-spike output blocking, and recovery.
+function autoRoute() {
+  const events = [];
+
+  for (const node of deploymentNodes) {
+    if (node.type !== 'wetland') continue;
+
+    // Overflow scenario: wetland flow exceeds capacity — throttle incoming links
+    if (node.capacity != null && node.flow > node.capacity) {
+      const incoming = deploymentLinks.filter(l => l.to === node.id && l.status === 'open');
+      for (const link of incoming) {
+        if (link.flow > 0.4) {
+          link.status = 'throttled';
+          link.flow   = Math.min(link.flow, 0.25);
+          const msg = `Auto-throttled ${link.id} (${link.from}→${link.to}): ${node.name} over capacity`;
+          recordAlert('overflow', node.id, msg);
+          events.push(msg);
+        }
+      }
+      // Try to open a bypass to the next wetland in the chain
+      const bypass = deploymentLinks.find(
+        l => l.from === node.id && l.status === 'closed' &&
+             deploymentNodes.some(n => n.id === l.to && n.type === 'wetland')
+      );
+      if (bypass) {
+        bypass.status = 'open';
+        bypass.flow   = 0.3;
+        const msg = `Auto-opened bypass ${bypass.id} (${bypass.from}→${bypass.to}) to relieve overflow at ${node.name}`;
+        recordAlert('overflow', node.id, msg);
+        events.push(msg);
+      }
+    }
+
+    // Pollution spike: quality critically low — throttle outgoing non-wetland links
+    if (node.quality < 0.65) {
+      const outgoing = deploymentLinks.filter(l => l.from === node.id && l.status === 'open');
+      for (const link of outgoing) {
+        const target = deploymentNodes.find(n => n.id === link.to);
+        if (target && target.type !== 'wetland') {
+          link.status = 'throttled';
+          link.flow   = Math.min(link.flow, 0.1);
+          const msg = `Auto-throttled output ${link.id}: ${node.name} quality critical (${(node.quality * 100).toFixed(0)}%)`;
+          recordAlert('quality', node.id, msg);
+          events.push(msg);
+        }
+      }
+    }
+
+    // Recovery: restore throttled incoming links once flow is safely below capacity
+    if (node.capacity != null && node.flow < node.capacity * 0.80) {
+      const throttledIn = deploymentLinks.filter(l => l.to === node.id && l.status === 'throttled');
+      for (const link of throttledIn) {
+        link.status = 'open';
+        link.flow   = Math.max(link.flow, 0.35);
+        const msg = `Auto-restored ${link.id}: ${node.name} back within safe capacity`;
+        recordAlert('recovery', node.id, msg);
+        events.push(msg);
+      }
+    }
+  }
+
+  return events;
+}
+
+// ── Routes ─────────────────────────────────────────────────────────────────────app.use('/auth',     require('./routes/auth'));
 app.use('/settings', require('./routes/settings').router);
 app.use('/nodes',    require('./routes/nodes'));
 
@@ -143,14 +217,18 @@ function generateAiRecommendations() {
   for (const node of deploymentNodes) {
     if (node.type !== 'wetland') continue;
     if (node.capacity != null && node.flow > node.capacity) {
-      recs.push(`${node.name}: Flow exceeds capacity — throttle upstream inflow and open alternate route.`);
+      recs.push(`⚠️ ${node.name}: Flow (${(node.flow * 100).toFixed(0)}%) exceeds capacity — throttle upstream inflow and open alternate route.`);
+    } else if (node.capacity != null && node.flow > node.capacity * 0.85) {
+      recs.push(`⚡ ${node.name}: Flow (${(node.flow * 100).toFixed(0)}%) approaching capacity — monitor closely.`);
     }
-    if (node.quality < 0.70) {
-      recs.push(`${node.name}: Quality trending low — retain water for extra residence time and reduce outflow.`);
+    if (node.quality < 0.65) {
+      recs.push(`❌ ${node.name}: Quality critical (${(node.quality * 100).toFixed(0)}%) — route to re-treatment, block reuse output.`);
+    } else if (node.quality < 0.75) {
+      recs.push(`⚠️ ${node.name}: Quality low (${(node.quality * 100).toFixed(0)}%) — extend residence time, reduce outflow rate.`);
     }
   }
   if (recs.length === 0) {
-    recs.push('All wetlands within capacity and quality stable. Continue normal operation.');
+    recs.push('✅ All wetlands within capacity and quality stable. Continue normal operation.');
   }
   return recs;
 }
@@ -177,12 +255,15 @@ app.get('/deployment-status', (req, res) => {
     }
   }
 
+  const routingEvents = autoRoute();
+
   return res.status(200).json({
     center: { lat: 27.4924, lng: 77.6737, zoom: 13 },
     nodes:  deploymentNodes,
     links:  deploymentLinks,
     ai:     { recommendations: generateAiRecommendations() },
     alerts,
+    routingEvents,
   });
 });
 
@@ -203,6 +284,12 @@ app.post('/deployment-control', (req, res) => {
   else if (action === 'retain')    { link.status = 'throttled'; link.flow = Math.min(0.3, link.flow); }
 
   return res.status(200).json({ link, message: `Action '${action}' applied to link ${linkId}.` });
+});
+
+// GET /alerts — recent auto-routing and quality alert history
+app.get('/alerts', (req, res) => {
+  const limit = parseInt(req.query.limit, 10) || 50;
+  return res.status(200).json(alertHistory.slice(0, limit));
 });
 
 // ── Start ──────────────────────────────────────────────────────────────────────

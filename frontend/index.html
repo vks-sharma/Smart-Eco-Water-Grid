@@ -48,7 +48,21 @@
 
   <!-- DASHBOARD -->
   <div id="dashboard" class="section">
-    <h2>Dashboard</h2>
+    <h2>Dashboard <span id="lastUpdated" class="last-updated"></span></h2>
+
+    <!-- Node selector -->
+    <div class="node-selector-bar">
+      <label for="nodeSelect">Monitoring Node:</label>
+      <select id="nodeSelect" onchange="onNodeSelectChange()">
+        <option value="">All Nodes (Latest)</option>
+        <option value="H1">H1 – Cluster A (Houses)</option>
+        <option value="H2">H2 – Cluster B (Houses)</option>
+        <option value="H3">H3 – Cluster C (Houses)</option>
+        <option value="W1">W1 – Wetland STP 1</option>
+        <option value="W2">W2 – Wetland STP 2</option>
+        <option value="W3">W3 – Wetland STP 3</option>
+      </select>
+    </div>
 
     <div class="dashboard">
       <div class="card" onclick="openParamModal('ph')" title="Click to see full history">
@@ -67,9 +81,21 @@
         <h3>Dissolved O₂ <span class="card-hint">▶</span></h3>
         <p id="doValue" class="card-value">--</p>
       </div>
+      <div class="card" onclick="openParamModal('conductivity')" title="Click to see full history">
+        <h3>Conductivity <span class="card-hint">▶</span></h3>
+        <p id="conductivityValue" class="card-value">--</p>
+      </div>
+      <div class="card" onclick="openParamModal('tds')" title="Click to see full history">
+        <h3>TDS <span class="card-hint">▶</span></h3>
+        <p id="tdsValue" class="card-value">--</p>
+      </div>
       <div class="card">
         <h3>Status</h3>
         <p id="statusValue" class="card-value">--</p>
+      </div>
+      <div class="card">
+        <h3>Action</h3>
+        <p id="actionValue" class="card-value">--</p>
       </div>
     </div>
 
@@ -78,18 +104,61 @@
     <div class="charts-row">
       <canvas id="turbidityChart"></canvas>
       <canvas id="phChart"></canvas>
+      <canvas id="tempChart"></canvas>
+      <canvas id="doChart"></canvas>
+    </div>
+
+    <!-- Alert log -->
+    <div class="alert-log">
+      <div class="alert-log-header">
+        <h4>🚨 Alert History</h4>
+        <button onclick="clearAlertLog()" class="btn-sm">Clear</button>
+      </div>
+      <div id="alertLogList" class="alert-log-list">
+        <p class="no-alerts">No alerts recorded yet.</p>
+      </div>
     </div>
   </div>
 
   <!-- DEPLOYMENT -->
   <div id="deployment" class="section">
     <h2>Deployment Map</h2>
-    <p class="section-hint">Click a node on the map to view its live dashboard.</p>
+    <p class="section-hint">Click a node on the map to view its live sensor data. Use Link Controls below to override routing.</p>
     <div id="notificationPanel"></div>
-    <div id="deploymentMap"></div>
+
+    <div class="map-wrapper">
+      <div id="deploymentMap"></div>
+      <div class="map-legend">
+        <b>Legend</b>
+        <div class="legend-item"><span class="legend-dot" style="background:#16a34a"></span> Wetland (Good)</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#dc2626"></span> Node (Critical)</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#2563eb"></span> House Cluster</div>
+        <div class="legend-item"><span class="legend-line" style="background:#6b7280"></span> Open flow</div>
+        <div class="legend-item"><span class="legend-line" style="background:#f59e0b;border-style:dashed"></span> Throttled</div>
+        <div class="legend-item"><span class="legend-line" style="background:#dc2626"></span> Closed</div>
+      </div>
+    </div>
+
     <div id="aiPanel">
       <h3>🤖 AI Recommendations</h3>
       <ul id="aiList"></ul>
+    </div>
+
+    <div id="linkControls" class="link-controls">
+      <h3>🔧 Link Controls</h3>
+      <p class="section-hint">Manually override water-flow routing between nodes.</p>
+      <table class="link-table">
+        <thead>
+          <tr>
+            <th>Link</th>
+            <th>Route</th>
+            <th>Status</th>
+            <th>Flow</th>
+            <th>Controls</th>
+          </tr>
+        </thead>
+        <tbody id="linkTableBody"></tbody>
+      </table>
     </div>
   </div>
 
@@ -100,9 +169,12 @@
       🔒 You are viewing as Guest. <a onclick="openLoginModal()" class="link-btn">Login</a> as admin to save changes.
     </p>
     <div id="thresholdForm"></div>
-    <button id="saveSettingsBtn" onclick="saveSettings()" class="btn-primary" disabled>
-      �� Save Thresholds
-    </button>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <button id="saveSettingsBtn" onclick="saveSettings()" class="btn-primary" disabled>
+        💾 Save Thresholds
+      </button>
+      <span id="settingsSaveMsg" class="settings-msg"></span>
+    </div>
   </div>
 
 </div>

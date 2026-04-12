@@ -4,7 +4,9 @@ const AppState = {
   thresholds:      null,          // loaded from /settings/thresholds
   latestData:      null,          // last sensor reading
   darkMode:        false,
-  refreshInterval: 300000,        // 5 minutes in ms
+  refreshInterval: 5000,          // 5 seconds per spec
+  selectedNodeId:  '',            // '' = all nodes, otherwise e.g. 'W1'
+  alertLog:        [],            // persistent in-session alert history (max 50)
 
   init() {
     this.darkMode = localStorage.getItem('darkMode') === 'true';
@@ -61,5 +63,11 @@ const AppState = {
     const safeMax = safe && safe.max != null ? safe.max : Infinity;
     if (value >= safeMin && value <= safeMax) return 'safe';
     return 'moderate';
+  },
+
+  // Add an entry to the in-session alert log (newest first, capped at 50)
+  addAlert(message, type) {
+    this.alertLog.unshift({ message, type: type || 'info', time: new Date().toLocaleTimeString() });
+    if (this.alertLog.length > 50) this.alertLog.pop();
   }
 };

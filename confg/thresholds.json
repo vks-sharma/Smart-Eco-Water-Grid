@@ -3,5 +3,6 @@
   "turbidity":       { "safe": { "max": 5 }, "moderate": { "min": 5.1, "max": 10 }, "unsafe": { "min": 10.1 } },
   "temperature":     { "safe": { "min": 15, "max": 28 }, "moderate": { "min": 10, "max": 14.9 }, "unsafe": {} },
   "dissolvedOxygen": { "safe": { "min": 6.5, "max": 14 }, "moderate": { "min": 5.0, "max": 6.4 }, "unsafe": { "max": 4.9 } },
-  "conductivity":    { "safe": { "max": 500 }, "moderate": { "min": 501, "max": 1500 }, "unsafe": { "min": 1501 } }
+  "conductivity":    { "safe": { "max": 500 }, "moderate": { "min": 501, "max": 1500 }, "unsafe": { "min": 1501 } },
+  "tds":             { "safe": { "max": 500 }, "moderate": { "min": 501, "max": 1000 }, "unsafe": { "min": 1001 } }
 }

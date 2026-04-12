@@ -1,6 +1,8 @@
 // Chart management
 let turbidityChart = null;
 let phChart        = null;
+let tempChart      = null;
+let doChart        = null;
 let modalChart     = null;
 
 const PARAM_LABELS = {
@@ -9,6 +11,7 @@ const PARAM_LABELS = {
   temperature:     'Temperature (°C)',
   dissolvedOxygen: 'Dissolved Oxygen (mg/L)',
   conductivity:    'Conductivity (µS/cm)',
+  tds:             'TDS (mg/L)',
 };
 
 function createParamChart(canvasId, label, color) {
@@ -43,14 +46,19 @@ function createParamChart(canvasId, label, color) {
 function initDashboardCharts() {
   if (turbidityChart) { turbidityChart.destroy(); turbidityChart = null; }
   if (phChart)        { phChart.destroy();        phChart = null; }
-  turbidityChart = createParamChart('turbidityChart', 'Turbidity (NTU)', '#ef4444');
-  phChart        = createParamChart('phChart',        'pH',              '#3b82f6');
+  if (tempChart)      { tempChart.destroy();      tempChart = null; }
+  if (doChart)        { doChart.destroy();        doChart = null; }
+  turbidityChart = createParamChart('turbidityChart', 'Turbidity (NTU)',      '#ef4444');
+  phChart        = createParamChart('phChart',        'pH',                   '#3b82f6');
+  tempChart      = createParamChart('tempChart',      'Temperature (°C)',     '#f59e0b');
+  doChart        = createParamChart('doChart',        'Dissolved O₂ (mg/L)', '#8b5cf6');
 }
 
 function updateDashboardCharts(data) {
   const time = new Date().toLocaleTimeString();
 
   function pushPoint(chart, value) {
+    if (!chart) return;
     chart.data.labels.push(time);
     chart.data.datasets[0].data.push(value);
     if (chart.data.labels.length > 20) {
@@ -60,8 +68,10 @@ function updateDashboardCharts(data) {
     chart.update();
   }
 
-  if (turbidityChart) pushPoint(turbidityChart, data.turbidity);
-  if (phChart)        pushPoint(phChart, data.ph);
+  pushPoint(turbidityChart, data.turbidity);
+  pushPoint(phChart,        data.ph);
+  pushPoint(tempChart,      data.temperature);
+  pushPoint(doChart,        data.dissolvedOxygen);
 }
 
 async function openParamModal(param) {
@@ -73,10 +83,11 @@ async function openParamModal(param) {
   // Destroy previous modal chart
   if (modalChart) { modalChart.destroy(); modalChart = null; }
 
-  // Fetch history
+  // Fetch history (node-aware)
   let history = [];
   try {
-    const res = await fetch('/history?limit=50');
+    const nodeParam = AppState.selectedNodeId ? '&nodeId=' + AppState.selectedNodeId : '';
+    const res = await fetch('/history?limit=50' + nodeParam);
     if (res.ok) history = await res.json();
   } catch {}
 
@@ -115,3 +126,4 @@ function closeChartModal() {
   document.getElementById('chartModal').close();
   if (modalChart) { modalChart.destroy(); modalChart = null; }
 }
+

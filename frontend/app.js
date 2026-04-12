@@ -550,12 +550,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // Deployment Map — Leaflet + OpenStreetMap tiles + /deployment-status API
 // ─────────────────────────────────────────────────────────────────────────────
 
-let deployMap        = null;  // Leaflet map instance (initialized once)
-let deployLayerLinks = null;  // Leaflet LayerGroup for polylines
-let deployLayerNodes = null;  // Leaflet LayerGroup for circle markers
-let deployActiveLink = null;  // Currently selected link id (for control panel)
-let deployPollTimer  = null;  // setInterval handle for deployment polling
-let deployInited     = false; // Tracks if buttons + first fetch have been wired
+let deployMap          = null;   // Leaflet map instance (initialized once)
+let deployLayerLinks   = null;   // Leaflet LayerGroup for polylines
+let deployLayerNodes   = null;   // Leaflet LayerGroup for circle markers
+let deployLayerAlerts  = null;   // Leaflet LayerGroup for blinking alert markers
+let deployActiveLink   = null;   // Currently selected link id (for control panel)
+let deployPollTimer    = null;   // setInterval handle for deployment polling
+let deployInited       = false;  // Tracks if buttons + first fetch have been wired
+let deployCenterSet    = false;  // Whether map center has been set from API
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -568,10 +570,8 @@ function deployFmt(v) {
 
 
 function deployNodeColor(node) {
-    if (node.type === 'house') return '#2563eb';
-    if (node.quality < 0.60)  return '#e11d48';   // bad
-    if (node.quality < 0.75)  return '#f59e0b';   // moderate
-    return '#10b981';                              // good
+    if (node.type === 'house') return '#2563eb';   // blue for house nodes
+    return '#10b981';                              // green for wetland nodes
 }
 
 /** Color for a link polyline based on status */
@@ -600,8 +600,27 @@ function deploySetKpis(nodes, links, alerts) {
 function deploySetAiBox(recommendations) {
     const box = deploy$('deployAiBox');
     if (!box) return;
-    box.textContent = (recommendations || []).join('\n') || 'No recommendations.';
+    if (!recommendations || recommendations.length === 0) {
+        box.innerHTML = '<p style="color:var(--muted,#666);font-style:italic;padding:4px 0;">No recommendations.</p>';
+        return;
+    }
+    box.innerHTML = '<ul style="margin:0;padding-left:16px;">' +
+        recommendations.map(r => `<li style="margin-bottom:6px;">${r}</li>`).join('') +
+        '</ul>';
 }
+
+function deploySetAlertPanel(alerts) {
+    const panel = deploy$('deployAlertPanel');
+    if (!panel) return;
+    if (!alerts || alerts.length === 0) {
+        panel.innerHTML = '<p style="color:#10b981;font-style:italic;padding:4px 0;">✅ No active alerts.</p>';
+        return;
+    }
+    panel.innerHTML = alerts.map(a =>
+        `<div class="alert-item">🚨 <strong>${a.nodeId}</strong>: ${a.message}</div>`
+    ).join('');
+}
+
 
 function deploySetSelection(text) {
     const box = deploy$('deploySelection');
@@ -624,7 +643,7 @@ function deployHideControls() {
 
 // ── Map layer rendering ──────────────────────────────────────────────────────
 
-function deployDrawLayers(nodes, links) {
+function deployDrawLayers(nodes, links, alerts) {
     if (!deployMap) return;
 
     // Remove old layers
@@ -633,6 +652,9 @@ function deployDrawLayers(nodes, links) {
     }
     if (deployLayerNodes) { deployLayerNodes.clearLayers(); } else {
         deployLayerNodes = L.layerGroup().addTo(deployMap);
+    }
+    if (deployLayerAlerts) { deployLayerAlerts.clearLayers(); } else {
+        deployLayerAlerts = L.layerGroup().addTo(deployMap);
     }
 
     const nodeIndex = {};
@@ -650,9 +672,11 @@ function deployDrawLayers(nodes, links) {
             opacity: 0.88
         });
 
-        poly.bindTooltip(
-            `Link ${link.id}: ${link.from} → ${link.to} | status: ${link.status} | flow: ${deployFmt(link.flow)}`,
-            { sticky: true }
+        poly.bindPopup(
+            `<strong>Link ${link.id}</strong><br>` +
+            `${link.from} → ${link.to}<br>` +
+            `Status: ${link.status}<br>` +
+            `Flow: ${deployFmt(link.flow)}`
         );
 
         poly.on('click', () => {
@@ -678,7 +702,12 @@ function deployDrawLayers(nodes, links) {
             fillOpacity: 0.92
         });
 
-        marker.bindTooltip(`${node.name} (${node.id})`, { direction: 'top' });
+        marker.bindPopup(
+            `<strong>${node.name}</strong><br>` +
+            `Type: ${node.type}<br>` +
+            `Flow: ${deployFmt(node.flow)}<br>` +
+            `Quality: ${deployFmt(node.quality)}`
+        );
 
         marker.on('click', () => {
             const lines = [
@@ -696,6 +725,22 @@ function deployDrawLayers(nodes, links) {
 
         marker.addTo(deployLayerNodes);
     });
+
+    // Draw blinking alert markers over affected nodes
+    (alerts || []).forEach(alert => {
+        const node = nodeIndex[alert.nodeId];
+        if (!node) return;
+
+        const alertIcon = L.divIcon({
+            html: `<div class="alert-marker" title="${alert.message}"></div>`,
+            className: '',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+        });
+        const alertMarker = L.marker([node.lat, node.lng], { icon: alertIcon, zIndexOffset: 1000 });
+        alertMarker.bindPopup(`<strong>⚠️ Alert</strong><br>${alert.message}`);
+        alertMarker.addTo(deployLayerAlerts);
+    });
 }
 
 // ── API polling ───────────────────────────────────────────────────────────────
@@ -706,9 +751,20 @@ async function fetchDeploymentStatus() {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
 
-        deployDrawLayers(data.nodes || [], data.links || []);
+        // Update map center from API on first load
+        if (deployMap && data.center && !deployCenterSet) {
+            deployMap.setView([data.center.lat, data.center.lng], data.center.zoom || 13);
+            deployCenterSet = true;
+        }
+
+        deployDrawLayers(data.nodes || [], data.links || [], data.alerts || []);
         deploySetKpis(data.nodes || [], data.links || [], data.alerts || []);
         deploySetAiBox((data.ai || {}).recommendations || []);
+        deploySetAlertPanel(data.alerts || []);
+
+        // Update last-updated timestamp
+        const tsEl = deploy$('deployLastUpdated');
+        if (tsEl) tsEl.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
 
         // Refresh the selected-link details if a link is still selected
         if (deployActiveLink) {
@@ -815,7 +871,7 @@ document.addEventListener('click', e => {
                     if (section && section.classList.contains('active')) {
                         fetchDeploymentStatus();
                     }
-                }, REFRESH_INTERVAL);
+                }, 5000); // poll every 5 seconds
             }
         }, 50);
     }

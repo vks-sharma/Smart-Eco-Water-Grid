@@ -1,5 +1,6 @@
 {
   "users": [
-    { "id": 1, "username": "admin", "passwordHash": "$2b$10$LCTvRgUuzY0Hs7gYRiiAb.kjllksGHvNbpukopyqakvs55UCryjGK", "role": "admin" }
+    { "id": 1, "username": "admin", "passwordHash": "$2b$10$LCTvRgUuzY0Hs7gYRiiAb.kjllksGHvNbpukopyqakvs55UCryjGK", "role": "admin" },
+    { "id": 2, "username": "vks", "passwordHash": "$2b$10$gXHmAm.md8EADXXoPtqNuOEPovJoG1peiwdT8rL6ck/wIDp0Femva", "role": "admin" }
   ]
 }

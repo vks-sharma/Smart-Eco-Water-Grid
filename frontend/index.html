@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -281,6 +281,9 @@
                             <div class="panel-title" style="margin-top:12px;">🤖 AI Recommendations</div>
                             <div id="deployAiBox" class="ai-box">Waiting for deployment data…</div>
 
+                            <div class="panel-title" style="margin-top:12px;">🚨 Alerts</div>
+                            <div id="deployAlertPanel" class="alert-panel">Loading…</div>
+
                             <div class="panel-title" style="margin-top:12px;">Selected</div>
                             <div id="deploySelection" class="selection-box">Click a node or a link on the map.</div>
 
@@ -294,6 +297,8 @@
                                 </div>
                                 <div id="deployControlStatus" class="control-status"></div>
                             </div>
+
+                            <div class="deploy-last-updated" id="deployLastUpdated">Last updated: --</div>
                         </div>
                     </div>
                 </div>

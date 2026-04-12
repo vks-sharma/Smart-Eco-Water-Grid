@@ -618,3 +618,51 @@
     .deployment-map  { height: 380px; }
 }
 
+/* ── Alert blinking marker (Leaflet divIcon) ────────────────────────────────── */
+@keyframes alertBlink {
+    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 6px rgba(239,68,68,0.6); }
+    50%       { opacity: 0.4; transform: scale(1.5); box-shadow: 0 0 16px rgba(239,68,68,0.95); }
+}
+.alert-marker {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #ef4444;
+    border: 3px solid rgba(254, 226, 226, 0.9);
+    animation: alertBlink 1s ease-in-out infinite;
+    cursor: pointer;
+}
+
+/* ── Alert panel in deployment sidebar ─────────────────────────────────────── */
+.alert-panel {
+    background: var(--stat-bg, #f8f9fa);
+    border-radius: 10px;
+    padding: 10px;
+    min-height: 54px;
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: var(--card-text, #333);
+    word-break: break-word;
+}
+.alert-item {
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    background: rgba(239, 68, 68, 0.08);
+    border-radius: 8px;
+    border-left: 3px solid #ef4444;
+    color: var(--card-text, #333);
+    animation: fadeIn 0.3s ease;
+}
+.alert-item:last-child { margin-bottom: 0; }
+
+/* ── Last-updated timestamp ─────────────────────────────────────────────────── */
+.deploy-last-updated {
+    font-size: 0.74rem;
+    color: var(--muted, #666);
+    text-align: right;
+    margin-top: 10px;
+    font-style: italic;
+    opacity: 0.85;
+}
+

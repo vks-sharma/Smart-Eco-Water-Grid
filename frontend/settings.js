@@ -8,6 +8,7 @@ const PARAM_DISPLAY = {
   temperature:     { label: 'Temperature', unit: '°C' },
   dissolvedOxygen: { label: 'Dissolved Oxygen', unit: 'mg/L' },
   conductivity:    { label: 'Conductivity', unit: 'µS/cm' },
+  tds:             { label: 'TDS', unit: 'mg/L' },
 };
 
 async function loadSettings() {
@@ -27,19 +28,29 @@ function buildSettingsForm(thresholds) {
   settingsFormBuilt = true;
 
   for (const [param, meta] of Object.entries(PARAM_DISPLAY)) {
-    const th = thresholds[param] || {};
-    const safe = th.safe || {};
+    const th     = thresholds[param] || {};
+    const safe   = th.safe   || {};
+    const unsafe = th.unsafe || {};
+
     const group = document.createElement('div');
     group.className = 'threshold-group';
     group.innerHTML = `
       <h4>${meta.label}${meta.unit ? ' (' + meta.unit + ')' : ''}</h4>
       <div class="threshold-row">
-        <label>Safe min</label>
+        <label class="range-label safe-label">Safe min</label>
         <input type="number" step="0.01" data-param="${param}" data-field="safe_min"
-               value="${safe.min ?? ''}" placeholder="—">
-        <label>Safe max</label>
+               value="${safe.min != null ? safe.min : ''}" placeholder="—">
+        <label class="range-label safe-label">Safe max</label>
         <input type="number" step="0.01" data-param="${param}" data-field="safe_max"
-               value="${safe.max ?? ''}" placeholder="—">
+               value="${safe.max != null ? safe.max : ''}" placeholder="—">
+      </div>
+      <div class="threshold-row">
+        <label class="range-label unsafe-label">Unsafe ≥</label>
+        <input type="number" step="0.01" data-param="${param}" data-field="unsafe_min"
+               value="${unsafe.min != null ? unsafe.min : ''}" placeholder="—">
+        <label class="range-label unsafe-label">Unsafe ≤</label>
+        <input type="number" step="0.01" data-param="${param}" data-field="unsafe_max"
+               value="${unsafe.max != null ? unsafe.max : ''}" placeholder="—">
       </div>`;
     container.appendChild(group);
   }
@@ -58,7 +69,7 @@ function buildSettingsForm(thresholds) {
 
 async function saveSettings() {
   if (!AppState.isAdmin()) return;
-  const inputs = document.querySelectorAll('#thresholdForm input[data-param]');
+  const inputs  = document.querySelectorAll('#thresholdForm input[data-param]');
   const updates = {};
 
   inputs.forEach(input => {
@@ -66,8 +77,10 @@ async function saveSettings() {
     const field = input.dataset.field;
     const val   = input.value !== '' ? parseFloat(input.value) : undefined;
     if (!updates[param]) updates[param] = { safe: {}, moderate: {}, unsafe: {} };
-    if (field === 'safe_min') updates[param].safe.min = val;
-    if (field === 'safe_max') updates[param].safe.max = val;
+    if (field === 'safe_min')   updates[param].safe.min   = val;
+    if (field === 'safe_max')   updates[param].safe.max   = val;
+    if (field === 'unsafe_min') updates[param].unsafe.min = val;
+    if (field === 'unsafe_max') updates[param].unsafe.max = val;
   });
 
   // Remove undefined keys
@@ -79,20 +92,26 @@ async function saveSettings() {
     }
   }
 
+  const msgEl = document.getElementById('settingsSaveMsg');
   try {
-    const res = await fetch('/settings/thresholds', {
-      method: 'PUT',
+    const res  = await fetch('/settings/thresholds', {
+      method:  'PUT',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type':  'application/json',
         'Authorization': 'Bearer ' + AppState.getToken()
       },
       body: JSON.stringify(updates)
     });
     const data = await res.json();
-    if (!res.ok) { alert('Error: ' + (data.error || 'Save failed.')); return; }
+    if (!res.ok) {
+      if (msgEl) { msgEl.textContent = 'Error: ' + (data.error || 'Save failed.'); msgEl.className = 'settings-msg error'; }
+      return;
+    }
     AppState.thresholds = data;
-    alert('Thresholds saved successfully.');
+    if (msgEl) { msgEl.textContent = '✅ Thresholds saved successfully.'; msgEl.className = 'settings-msg success'; }
+    setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 4000);
   } catch {
-    alert('Network error saving settings.');
+    if (msgEl) { msgEl.textContent = '❌ Network error saving settings.'; msgEl.className = 'settings-msg error'; }
   }
 }
+

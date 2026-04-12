@@ -1,4 +1,224 @@
-<section id="deploymentSection" style="display:none;">
-    <div id="notificationPanel"></div>
-    <div id="deploymentMap" style="min-height:440px;"></div>
-</section>\n\n<!-- Sidebar Navigation -->\n<a href="#" data-target="deployment">Deployment</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Eco-Water Grid</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<link rel="stylesheet" href="styles.css">
+
+<style>
+body {
+    margin: 0;
+    display: flex;
+    font-family: Arial;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 220px;
+    background: #0a2540;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100vh;
+}
+
+.sidebar-top {
+    padding: 20px;
+}
+
+.sidebar a {
+    display: block;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.sidebar a:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.sidebar-bottom {
+    padding: 15px;
+}
+
+/* MAIN */
+.main {
+    flex: 1;
+    padding: 20px;
+    background: #f5f9fc;
+}
+
+/* HEADER */
+.header h1 { margin: 0; }
+.header p { color: gray; }
+
+/* DASHBOARD */
+.dashboard {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.card {
+    background: white;
+    padding: 15px;
+    flex: 1 1 150px;
+    border-radius: 10px;
+}
+
+/* MAP */
+#deploymentMap {
+    height: 400px;
+    border-radius: 10px;
+}
+
+/* SECTIONS */
+.section { display: none; }
+
+/* DARK MODE */
+.dark-mode {
+    background: #0f172a;
+    color: white;
+}
+
+.dark-mode .main {
+    background: #0f172a;
+}
+
+.dark-mode .card {
+    background: #1e293b;
+}
+
+.dark-mode .sidebar {
+    background: #020617;
+}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="sidebar-top">
+        <h3>Smart Eco-Water Grid</h3>
+
+        <a onclick="showSection('dashboard')">Dashboard</a>
+        <a onclick="showSection('deployment')" id="deploymentBtn">Deployment</a>
+        <a onclick="showSection('settings')">Settings</a>
+    </div>
+
+    <div class="sidebar-bottom">
+        <div id="userName">Guest</div>
+        <a onclick="logout()">Logout</a>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <!-- HEADER -->
+    <div class="header">
+        <h1>Smart Eco-Water Grid</h1>
+        <p>Nature-Based Wastewater Treatment Grid</p>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="section">
+
+        <div style="display:flex; justify-content:space-between;">
+            <h2>Dashboard</h2>
+            <button onclick="toggleTheme()" id="themeBtn">🌙</button>
+        </div>
+
+        <!-- CARDS -->
+        <div class="dashboard">
+            <div class="card"><h3>pH</h3><p id="phValue">--</p></div>
+            <div class="card"><h3>Turbidity</h3><p id="turbidityValue">--</p></div>
+            <div class="card"><h3>Temperature</h3><p id="tempValue">--</p></div>
+            <div class="card"><h3>Dissolved Oxygen</h3><p id="doValue">--</p></div>
+            <div class="card"><h3>Status</h3><p id="statusValue">--</p></div>
+        </div>
+
+        <!-- ALERTS -->
+        <div id="dashboardAlerts"></div>
+
+        <!-- GRAPHS -->
+        <canvas id="turbidityChart"></canvas>
+        <canvas id="phChart" style="margin-top:20px;"></canvas>
+
+    </div>
+
+    <!-- DEPLOYMENT -->
+    <div id="deployment" class="section">
+        <div id="notificationPanel"></div>
+        <div id="deploymentMap"></div>
+
+        <div id="aiPanel">
+            <h3>AI Recommendations</h3>
+            <ul id="aiList"></ul>
+        </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="settings" class="section">
+        <h3>Settings</h3>
+        <p>Login required to modify dataset (future feature)</p>
+    </div>
+
+</div>
+
+<script src="app.js"></script>
+
+<script>
+// Section switching
+function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+
+    if (id === 'deployment') {
+        setTimeout(() => {
+            if (!window.mapInitialized) {
+                initMap();
+                window.mapInitialized = true;
+            }
+        }, 200);
+    }
+
+    if (id === 'dashboard') {
+        if (!window.chartInitialized) {
+            initCharts();
+            window.chartInitialized = true;
+        }
+    }
+}
+
+// Theme toggle
+function toggleTheme() {
+    document.body.classList.toggle("dark-mode");
+    const btn = document.getElementById("themeBtn");
+    btn.innerText = document.body.classList.contains("dark-mode") ? "☀️" : "🌙";
+}
+
+// Logout
+function logout() {
+    document.getElementById("userName").innerText = "Guest";
+    alert("Logged out. Login required for settings.");
+}
+
+// Default section
+showSection('dashboard');
+</script>
+
+</body>
+</html>

@@ -1,97 +1,45 @@
-.settings-card {
-  max-width: 420px;
-  margin: 40px auto;
-  background: rgba(255,255,255,0.8);
-  border-radius: 18px;
-  box-shadow: 0 4px 32px rgba(50,200,190,0.10);
-  padding: 36px 36px 32px 36px;
-  backdrop-filter: blur(9px) brightness(1.06);
-  border: 1.5px solid #a5f3ecd6;
-}
-.settings-group {
-  margin-bottom: 22px;
-  display: flex;
-  gap: 22px;
-}
-.settings-group label {
-  flex: 1 1 0;
-  font-weight: 500;
-  color: #194040;
-}
-.settings-card input,
-.settings-card select {
-  width: 100%;
-  padding: 7px 12px;
-  margin-top: 7px;
-  font-size: 1em;
-  border-radius: 7px;
-  border: 1px solid #def3f0;
-  background: rgba(255,255,255,0.9);
-  box-shadow: 0 2px 6px rgba(40,120,110,0.06);
-}
-.settings-card input:disabled, .settings-card select:disabled {
-  background:#f3f6f7;
-  color:#b1b7be;
-}
-.settings-banner {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.08em;
-  color: #064e3b;
-  background: #cdf6ecdd;
-  border-radius: 11px;
-  border: 1.5px solid #7af7d2bb;
-  margin-bottom: 18px;
-  padding: 7px 0;
-  font-weight: 600;
-}
-.settings-btn {
-  margin-right:12px;
-  border-radius:7px;
-  border: none;
-  padding: 7px 19px;
-  background-color: #16bd90;
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-}
-.settings-btn-secondary {
-  background:#e5ebe9;
-  color:#23967e;
-}
-.settings-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-.settings-meta {
-  display:flex;
-  gap:26px;
-  margin-top:17px;
-  color:#485;
-  font-size:0.97em;
-}
-@media (max-width:600px) {
-  .settings-card { padding: 18px 8px 16px 8px; }
+/* === Deployment Map Section === */
+.deployment-section {
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+    background: rgba(255,255,255,0.18);
 }
 
-/* Glassmorphic styles */
-.settings-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+#deploymentMap {
+    width: 100%;
+    min-height: 430px;
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(30,78,100,0.09);
+    background: rgba(245,250,255,0.8);
+    margin-bottom: 28px;
+    margin-top: 16px;
 }
-.settings-group {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+
+/* Notification styles */
+#notificationPanel {
+    position: sticky;
+    top: 15px;
+    z-index: 111;
+    width: 98%;
+    max-width: 430px;
+    margin: 0 auto 20px auto;
 }
-.settings-banner {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+.notification-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 1.08em;
+    color: #00427a;
+    background: rgba(216,233,255,0.9);
+    border-left: 5px solid #0587ff;
+    border-radius: 7px;
+    box-shadow: 0 2px 10px rgba(40,80,220,0.09);
+    padding: 10px 18px;
+    margin-bottom: 10px;
+    transition: background .3s, color .3s;
 }
-.settings-btn:disabled {
-  background: rgba(240, 240, 240, 0.7);
-  color: #999;
-}
+.notification-banner.warning { color:#b65100; background:rgba(253,221,150,0.95); border-left-color:#ffa502; }
+.notification-banner.danger { color:#a40030; background:rgba(255,184,198,0.97); border-left-color:#ff2359; }

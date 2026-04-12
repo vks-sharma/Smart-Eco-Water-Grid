@@ -682,7 +682,7 @@ function deployDrawLayers(nodes, links) {
                 `Flow: ${node.flow.toFixed(2)}`,
                 `Quality: ${node.quality.toFixed(2)}`
             ];
-            if (node.type === 'wetland' && node.capacity != null) {
+            if (node.type === 'wetland' && node.capacity !== null && node.capacity !== undefined) {
                 lines.push(`Capacity: ${node.capacity.toFixed(2)}`);
             }
             deploySetSelection(lines.join('\n'));

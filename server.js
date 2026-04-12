@@ -111,7 +111,7 @@ function generateAiRecommendations() {
   const recs = [];
   for (const node of deploymentNodes) {
     if (node.type !== 'wetland') continue;
-    if (node.capacity != null && node.flow > node.capacity) {
+    if (node.capacity !== null && node.capacity !== undefined && node.flow > node.capacity) {
       recs.push(`${node.name}: Flow exceeds capacity — throttle upstream inflow and open alternate route.`);
     }
     if (node.quality < 0.70) {
@@ -141,7 +141,7 @@ app.get('/deployment-status', (req, res) => {
   const alerts = [];
   for (const node of deploymentNodes) {
     if (node.type !== 'wetland') continue;
-    if (node.capacity != null && node.flow > node.capacity) {
+    if (node.capacity !== null && node.capacity !== undefined && node.flow > node.capacity) {
       alerts.push({ nodeId: node.id, type: 'capacity', message: `${node.name} over capacity` });
     }
     if (node.quality < 0.65) {

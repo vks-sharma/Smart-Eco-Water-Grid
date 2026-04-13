@@ -1,8 +1,320 @@
-<div id="nodeInfoPanel" class="node-info-panel" style="display:none">
-  <div class="node-info-header">
-    <h3 id="nodeInfoTitle">Node</h3>
-    <button type="button" class="close-btn" onclick="closeNodeInfoPanel()"><i class="fa-solid fa-xmark"></i></button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Eco-Water Grid</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon"><i class="fa-solid fa-water"></i></div>
+    <div class="brand-text">
+      <span class="brand-name">Smart Eco-Water Grid</span>
+      <span class="brand-sub">System Status</span>
+    </div>
   </div>
-  <div id="nodeInfoBody" class="node-info-body"></div>
-  <canvas id="nodeInfoChart" height="120"></canvas>
+
+  <nav class="sidebar-nav">
+    <a class="nav-item" data-section="dashboard" onclick="showSection('dashboard')">
+      <i class="fa-solid fa-gauge-high nav-icon"></i>
+      <span>Dashboard</span>
+    </a>
+    <a class="nav-item" data-section="deployment" onclick="showSection('deployment')">
+      <i class="fa-solid fa-map-location-dot nav-icon"></i>
+      <span>Deployment</span>
+    </a>
+    <a class="nav-item" data-section="settings" onclick="showSection('settings')">
+      <i class="fa-solid fa-sliders nav-icon"></i>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar"><i class="fa-solid fa-user"></i></div>
+      <div id="userName" class="sidebar-username">Guest</div>
+    </div>
+    <a id="loginBtn" class="nav-item nav-item-sm" onclick="openLoginModal()">
+      <i class="fa-solid fa-right-to-bracket nav-icon"></i>
+      <span>Login</span>
+    </a>
+    <a id="logoutBtn" class="nav-item nav-item-sm" onclick="doLogout()" style="display:none">
+      <i class="fa-solid fa-right-from-bracket nav-icon"></i>
+      <span>Sign Out</span>
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <h1 class="topbar-title">Smart Eco-Water Grid</h1>
+      <p class="topbar-sub">Nature-Based Wastewater Treatment Grid</p>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-status">
+        <span class="status-dot live"></span>
+        <span class="status-label">Live Monitoring</span>
+      </div>
+      <button onclick="toggleTheme()" id="themeBtn" class="theme-btn" title="Toggle dark mode">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="section">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title"><i class="fa-solid fa-gauge-high"></i> Dashboard</h2>
+        <span id="lastUpdated" class="last-updated"></span>
+      </div>
+      <div class="node-selector-bar">
+        <label for="nodeSelect"><i class="fa-solid fa-location-dot"></i> Node:</label>
+        <select id="nodeSelect" onchange="onNodeSelectChange()">
+          <option value="">All Nodes (Latest)</option>
+          <option value="H1">H1 – Cluster A (Houses)</option>
+          <option value="H2">H2 – Cluster B (Houses)</option>
+          <option value="H3">H3 – Cluster C (Houses)</option>
+          <option value="W1">W1 – Wetland STP 1</option>
+          <option value="W2">W2 – Wetland STP 2</option>
+          <option value="W3">W3 – Wetland STP 3</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="dashboard">
+      <div class="card" onclick="openParamModal('ph')" title="Click to see full history">
+        <div class="card-icon card-icon-blue"><i class="fa-solid fa-flask"></i></div>
+        <div class="card-body">
+          <h3>pH Level <span class="card-hint"><i class="fa-solid fa-chart-line"></i></span></h3>
+          <p id="phValue" class="card-value">--</p>
+          <span class="card-unit">potential H</span>
+        </div>
+      </div>
+      <div class="card" onclick="openParamModal('turbidity')" title="Click to see full history">
+        <div class="card-icon card-icon-cyan"><i class="fa-solid fa-droplet"></i></div>
+        <div class="card-body">
+          <h3>Turbidity <span class="card-hint"><i class="fa-solid fa-chart-line"></i></span></h3>
+          <p id="turbidityValue" class="card-value">--</p>
+          <span class="card-unit">NTU</span>
+        </div>
+      </div>
+      <div class="card" onclick="openParamModal('temperature')" title="Click to see full history">
+        <div class="card-icon card-icon-orange"><i class="fa-solid fa-temperature-half"></i></div>
+        <div class="card-body">
+          <h3>Temperature <span class="card-hint"><i class="fa-solid fa-chart-line"></i></span></h3>
+          <p id="tempValue" class="card-value">--</p>
+          <span class="card-unit">°C</span>
+        </div>
+      </div>
+      <div class="card" onclick="openParamModal('dissolvedOxygen')" title="Click to see full history">
+        <div class="card-icon card-icon-green"><i class="fa-solid fa-wind"></i></div>
+        <div class="card-body">
+          <h3>Dissolved O₂ <span class="card-hint"><i class="fa-solid fa-chart-line"></i></span></h3>
+          <p id="doValue" class="card-value">--</p>
+          <span class="card-unit">mg/L</span>
+        </div>
+      </div>
+      <div class="card" onclick="openParamModal('conductivity')" title="Click to see full history">
+        <div class="card-icon card-icon-purple"><i class="fa-solid fa-bolt"></i></div>
+        <div class="card-body">
+          <h3>Conductivity <span class="card-hint"><i class="fa-solid fa-chart-line"></i></span></h3>
+          <p id="conductivityValue" class="card-value">--</p>
+          <span class="card-unit">µS/cm</span>
+        </div>
+      </div>
+      <div class="card" onclick="openParamModal('tds')" title="Click to see full history">
+        <div class="card-icon card-icon-teal"><i class="fa-solid fa-filter"></i></div>
+        <div class="card-body">
+          <h3>TDS <span class="card-hint"><i class="fa-solid fa-chart-line"></i></span></h3>
+          <p id="tdsValue" class="card-value">--</p>
+          <span class="card-unit">mg/L</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-icon card-icon-gray"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="card-body">
+          <h3>Water Status</h3>
+          <p id="statusValue" class="card-value">--</p>
+          <span class="card-unit">quality</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-icon card-icon-gray"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+        <div class="card-body">
+          <h3>Recommended Action</h3>
+          <p id="actionValue" class="card-value">--</p>
+          <span class="card-unit">treatment</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="dashboardAlerts"></div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-card-header"><i class="fa-solid fa-droplet"></i> Turbidity</div>
+        <canvas id="turbidityChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header"><i class="fa-solid fa-flask"></i> pH</div>
+        <canvas id="phChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header"><i class="fa-solid fa-temperature-half"></i> Temperature</div>
+        <canvas id="tempChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header"><i class="fa-solid fa-wind"></i> Dissolved O₂</div>
+        <canvas id="doChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Alert log -->
+    <div class="alert-log">
+      <div class="alert-log-header">
+        <h4><i class="fa-solid fa-triangle-exclamation"></i> Alert History</h4>
+        <button onclick="clearAlertLog()" class="btn-sm"><i class="fa-solid fa-trash-can"></i> Clear</button>
+      </div>
+      <div id="alertLogList" class="alert-log-list">
+        <p class="no-alerts">No alerts recorded yet.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEPLOYMENT -->
+  <div id="deployment" class="section">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title"><i class="fa-solid fa-map-location-dot"></i> Deployment Map</h2>
+        <p class="section-hint">Click a node on the map to view its live sensor data. Use Link Controls below to override routing.</p>
+      </div>
+    </div>
+    <div id="notificationPanel"></div>
+
+    <div class="map-wrapper">
+      <div id="deploymentMap"></div>
+      <div class="map-legend">
+        <b>Legend</b>
+        <div class="legend-item"><span class="legend-dot" style="background:#16a34a"></span> Wetland (Good)</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#dc2626"></span> Node (Critical)</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#2563eb"></span> House Cluster</div>
+        <div class="legend-item"><span class="legend-line" style="background:#6b7280"></span> Open flow</div>
+        <div class="legend-item"><span class="legend-line" style="background:#f59e0b;border-style:dashed"></span> Throttled</div>
+        <div class="legend-item"><span class="legend-line" style="background:#dc2626"></span> Closed</div>
+      </div>
+    </div>
+
+    <div id="aiPanel">
+      <h3><i class="fa-solid fa-robot"></i> AI Recommendations</h3>
+      <ul id="aiList"></ul>
+    </div>
+
+    <div id="linkControls" class="link-controls">
+      <h3><i class="fa-solid fa-screwdriver-wrench"></i> Link Controls</h3>
+      <p class="section-hint">Manually override water-flow routing between nodes.</p>
+      <table class="link-table">
+        <thead>
+          <tr>
+            <th>Link</th>
+            <th>Route</th>
+            <th>Status</th>
+            <th>Flow</th>
+            <th>Controls</th>
+          </tr>
+        </thead>
+        <tbody id="linkTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="settings" class="section">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title"><i class="fa-solid fa-sliders"></i> Settings — Alert Thresholds</h2>
+      </div>
+    </div>
+    <p id="settingsGuestNote" class="guest-note">
+      <i class="fa-solid fa-lock"></i> You are viewing as Guest. <a onclick="openLoginModal()" class="link-btn">Login</a> as admin to save changes.
+    </p>
+    <div id="thresholdForm"></div>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <button id="saveSettingsBtn" onclick="saveSettings()" class="btn-primary" disabled>
+        <i class="fa-solid fa-floppy-disk"></i> Save Thresholds
+      </button>
+      <span id="settingsSaveMsg" class="settings-msg"></span>
+    </div>
+  </div>
+
 </div>
+
+<!-- NODE PANEL (slide-in) -->
+<div id="nodePanel" class="node-panel" style="display:none">
+  <div class="node-panel-header">
+    <h3 id="nodePanelTitle">Node</h3>
+    <button onclick="closeNodePanel()" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div id="nodePanelBody"></div>
+</div>
+
+<!-- CHART MODAL -->
+<dialog id="chartModal" class="chart-modal">
+  <div class="modal-header">
+    <h3 id="chartModalTitle">Chart</h3>
+    <button onclick="closeChartModal()" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <canvas id="modalChartCanvas"></canvas>
+</dialog>
+
+<!-- LOGIN MODAL -->
+<dialog id="loginModal" class="login-modal">
+  <div class="modal-header">
+    <h3><i class="fa-solid fa-right-to-bracket"></i> Login</h3>
+    <button onclick="closeLoginModal()" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <form id="loginForm" onsubmit="submitLogin(event)">
+    <label for="loginUsername"><i class="fa-solid fa-user"></i> Username</label>
+    <input id="loginUsername" type="text" autocomplete="username" required placeholder="Enter username">
+    <label for="loginPassword"><i class="fa-solid fa-lock"></i> Password</label>
+    <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Enter password">
+    <p id="loginError" class="form-error"></p>
+    <button type="submit" class="btn-primary"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
+  </form>
+</dialog>
+
+<!-- Scripts (order matters: state first, then modules, then app) -->
+<script src="state.js"></script>
+<script src="auth.js"></script>
+<script src="charts.js"></script>
+<script src="settings.js"></script>
+<script src="nodePanel.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

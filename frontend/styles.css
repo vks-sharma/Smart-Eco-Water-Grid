@@ -799,7 +799,6 @@ html.dark-mode .notif-dropdown {
   transition: color var(--t);
   font-variant-numeric: tabular-nums;
   white-space: normal;
-  overflow: visible;
   word-break: break-word;
 }
 
@@ -1818,8 +1817,8 @@ dialog::backdrop {
 }
 .gold-hover:hover {
   transform:    translateY(-3px) scale(1.02);
-  border-color: var(--gold-400) !important;
-  box-shadow:   0 10px 25px rgba(0,0,0,0.38), 0 0 12px var(--gold-glow) !important;
+  border-color: var(--gold-400);
+  box-shadow:   0 10px 25px rgba(0,0,0,0.38), 0 0 12px var(--gold-glow);
 }
 /* Nav items slide horizontally, not up */
 .nav-item.gold-hover:hover {
@@ -1830,14 +1829,6 @@ dialog::backdrop {
    NEW: CARD GOLD HOVER UPGRADE
    Override box-shadow / border-color on existing .card and .chart-card hover
 ========================= */
-.card:hover {
-  border-color: rgba(212,160,23,0.45);
-  box-shadow:   0 0 28px var(--gold-glow), 0 8px 32px rgba(212,160,23,0.12), var(--shadow-lg);
-}
-.chart-card:hover {
-  border-color: rgba(212,160,23,0.35);
-  box-shadow:   0 0 20px var(--gold-glow), var(--shadow-lg);
-}
 
 /* =========================
    NEW: SIDEBAR — GOLD ACTIVE INDICATOR

@@ -864,7 +864,7 @@ html.dark-mode .notif-dropdown {
   border-left: 4px solid var(--mod);
 }
 html.dark-mode .notification-banner.warning {
-  color: var(--gold-400);
+  color: #fbbf24;
 }
 
 .notification-banner.danger {
@@ -1825,10 +1825,7 @@ dialog::backdrop {
   transform: translateX(3px);
 }
 
-/* =========================
-   NEW: CARD GOLD HOVER UPGRADE
-   Override box-shadow / border-color on existing .card and .chart-card hover
-========================= */
+/* Gold hover effects for .card and .chart-card are applied via .gold-hover utility class above. */
 
 /* =========================
    NEW: SIDEBAR — GOLD ACTIVE INDICATOR

@@ -128,8 +128,8 @@ function closeNodePanel() {
   const panel = document.getElementById('nodePanel');
   if (!panel) return;
   panel.classList.remove('panel-open');
-  // Destroy chart after transition completes
+  // Destroy chart after transition completes (400ms = CSS transition duration)
   setTimeout(() => {
     if (nodePanelChart) { nodePanelChart.destroy(); nodePanelChart = null; }
-  }, 420);
+  }, 400);
 }

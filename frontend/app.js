@@ -85,8 +85,6 @@ function toggleTheme() {
   const isDark = !AppState.darkMode;
   AppState.setDarkMode(isDark);
   _updateThemeBtn(isDark);
-  // Animate theme transition
-  document.body.style.transition = 'background 0.4s ease, color 0.4s ease';
 }
 
 function _updateThemeBtn(isDark) {
@@ -160,7 +158,7 @@ function toggleNotifDropdown() {
     // Remove badge when opened
     const badge = document.getElementById('notifBadge');
     if (badge) badge.style.display = 'none';
-    // Close when clicking outside
+    // Defer to next tick so this click doesn't immediately trigger the close handler
     setTimeout(() => {
       document.addEventListener('click', _closeNotifOutside, { once: true, capture: true });
     }, 0);
@@ -220,7 +218,7 @@ function onNodeSelectChange() {
 // MAP INIT
 // =========================
 function initMap() {
-  map = L.map('deploymentMap', { zoomAnimation: true, fadeAnimation: true }).setView([27.4924, 77.6737], 13);
+  map = L.map('deploymentMap', { zoomAnimation: true, fadeAnimation: true }).setView([27.4924, 77.6737], 13); // Default view: Faridabad, Haryana, India
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,

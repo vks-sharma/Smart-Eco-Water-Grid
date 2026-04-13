@@ -70,7 +70,7 @@ function buildChartOptions(label) {
         bodyFont:  { size: 11, family: 'Inter, sans-serif' },
         displayColors: false,
         callbacks: {
-          title: (items) => new Date().toLocaleTimeString(),
+          title: (items) => items[0]?.label || new Date().toLocaleTimeString(),
         }
       }
     },

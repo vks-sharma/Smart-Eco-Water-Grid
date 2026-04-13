@@ -42,15 +42,15 @@
   </div>
 
   <nav class="sidebar-nav">
-    <a class="nav-item" data-section="dashboard" onclick="showSection('dashboard')">
+    <a class="nav-item gold-hover" data-section="dashboard" onclick="showSection('dashboard')">
       <i class="fa-solid fa-gauge-high nav-icon"></i>
       <span class="nav-label">Dashboard</span>
     </a>
-    <a class="nav-item" data-section="deployment" onclick="showSection('deployment')">
+    <a class="nav-item gold-hover" data-section="deployment" onclick="showSection('deployment')">
       <i class="fa-solid fa-map-location-dot nav-icon"></i>
       <span class="nav-label">Deployment</span>
     </a>
-    <a class="nav-item" data-section="settings" onclick="showSection('settings')">
+    <a class="nav-item gold-hover" data-section="settings" onclick="showSection('settings')">
       <i class="fa-solid fa-sliders nav-icon"></i>
       <span class="nav-label">Settings</span>
     </a>
@@ -61,11 +61,11 @@
       <div class="user-avatar"><i class="fa-solid fa-user"></i></div>
       <div id="userName" class="sidebar-username">Guest</div>
     </div>
-    <a id="loginBtn" class="nav-item nav-item-sm" onclick="openLoginModal()">
+    <a id="loginBtn" class="nav-item nav-item-sm gold-hover" onclick="openLoginModal()">
       <i class="fa-solid fa-right-to-bracket nav-icon"></i>
       <span class="nav-label">Login</span>
     </a>
-    <a id="logoutBtn" class="nav-item nav-item-sm" onclick="doLogout()" style="display:none">
+    <a id="logoutBtn" class="nav-item nav-item-sm gold-hover" onclick="doLogout()" style="display:none">
       <i class="fa-solid fa-right-from-bracket nav-icon"></i>
       <span class="nav-label">Sign Out</span>
     </a>
@@ -135,7 +135,7 @@
     </div>
 
     <div class="dashboard">
-      <div class="card" onclick="openParamModal('ph')" title="Click to see full history">
+      <div class="card gold-hover" onclick="openParamModal('ph')" title="Click to see full history">
         <div class="card-icon card-icon-blue"><i class="fa-solid fa-flask"></i></div>
         <div class="card-body">
           <h3>pH Level <span class="card-hint"><i class="fa-solid fa-chart-line"></i></span></h3>
@@ -143,7 +143,7 @@
           <span class="card-unit">potential H</span>
         </div>
       </div>
-      <div class="card" onclick="openParamModal('turbidity')" title="Click to see full history">
+      <div class="card gold-hover" onclick="openParamModal('turbidity')" title="Click to see full history">
         <div class="card-icon card-icon-cyan"><i class="fa-solid fa-droplet"></i></div>
         <div class="card-body">
           <h3>Turbidity <span class="card-hint"><i class="fa-solid fa-chart-line"></i></span></h3>
@@ -151,7 +151,7 @@
           <span class="card-unit">NTU</span>
         </div>
       </div>
-      <div class="card" onclick="openParamModal('temperature')" title="Click to see full history">
+      <div class="card gold-hover" onclick="openParamModal('temperature')" title="Click to see full history">
         <div class="card-icon card-icon-orange"><i class="fa-solid fa-temperature-half"></i></div>
         <div class="card-body">
           <h3>Temperature <span class="card-hint"><i class="fa-solid fa-chart-line"></i></span></h3>
@@ -159,7 +159,7 @@
           <span class="card-unit">°C</span>
         </div>
       </div>
-      <div class="card" onclick="openParamModal('dissolvedOxygen')" title="Click to see full history">
+      <div class="card gold-hover" onclick="openParamModal('dissolvedOxygen')" title="Click to see full history">
         <div class="card-icon card-icon-green"><i class="fa-solid fa-wind"></i></div>
         <div class="card-body">
           <h3>Dissolved O₂ <span class="card-hint"><i class="fa-solid fa-chart-line"></i></span></h3>
@@ -167,7 +167,7 @@
           <span class="card-unit">mg/L</span>
         </div>
       </div>
-      <div class="card" onclick="openParamModal('conductivity')" title="Click to see full history">
+      <div class="card gold-hover" onclick="openParamModal('conductivity')" title="Click to see full history">
         <div class="card-icon card-icon-purple"><i class="fa-solid fa-bolt"></i></div>
         <div class="card-body">
           <h3>Conductivity <span class="card-hint"><i class="fa-solid fa-chart-line"></i></span></h3>
@@ -175,7 +175,7 @@
           <span class="card-unit">µS/cm</span>
         </div>
       </div>
-      <div class="card" onclick="openParamModal('tds')" title="Click to see full history">
+      <div class="card gold-hover" onclick="openParamModal('tds')" title="Click to see full history">
         <div class="card-icon card-icon-teal"><i class="fa-solid fa-filter"></i></div>
         <div class="card-body">
           <h3>TDS <span class="card-hint"><i class="fa-solid fa-chart-line"></i></span></h3>
@@ -183,7 +183,7 @@
           <span class="card-unit">mg/L</span>
         </div>
       </div>
-      <div class="card">
+      <div class="card gold-hover">
         <div class="card-icon card-icon-gray"><i class="fa-solid fa-circle-check"></i></div>
         <div class="card-body">
           <h3>Water Status</h3>
@@ -191,7 +191,7 @@
           <span class="card-unit">quality</span>
         </div>
       </div>
-      <div class="card">
+      <div class="card gold-hover">
         <div class="card-icon card-icon-gray"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
         <div class="card-body">
           <h3>Recommended Action</h3>
@@ -204,19 +204,19 @@
     <div id="dashboardAlerts"></div>
 
     <div class="charts-row">
-      <div class="chart-card">
+      <div class="chart-card gold-hover">
         <div class="chart-card-header"><i class="fa-solid fa-droplet"></i> Turbidity</div>
         <canvas id="turbidityChart"></canvas>
       </div>
-      <div class="chart-card">
+      <div class="chart-card gold-hover">
         <div class="chart-card-header"><i class="fa-solid fa-flask"></i> pH</div>
         <canvas id="phChart"></canvas>
       </div>
-      <div class="chart-card">
+      <div class="chart-card gold-hover">
         <div class="chart-card-header"><i class="fa-solid fa-temperature-half"></i> Temperature</div>
         <canvas id="tempChart"></canvas>
       </div>
-      <div class="chart-card">
+      <div class="chart-card gold-hover">
         <div class="chart-card-header"><i class="fa-solid fa-wind"></i> Dissolved O₂</div>
         <canvas id="doChart"></canvas>
       </div>
@@ -308,7 +308,7 @@
     </p>
     <div id="thresholdForm"></div>
     <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-      <button id="saveSettingsBtn" onclick="saveSettings()" class="btn-primary" disabled>
+      <button id="saveSettingsBtn" onclick="saveSettings()" class="btn-primary gold-hover" disabled>
         <i class="fa-solid fa-floppy-disk"></i> Save Thresholds
       </button>
       <span id="settingsSaveMsg" class="settings-msg"></span>
@@ -350,7 +350,7 @@
     <label for="loginPassword"><i class="fa-solid fa-lock"></i> Password</label>
     <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Enter password">
     <p id="loginError" class="form-error"></p>
-    <button type="submit" class="btn-primary"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
+    <button type="submit" class="btn-primary gold-hover"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
   </form>
 </dialog>
 

@@ -281,6 +281,8 @@ function renderNodes(nodes) {
       fillColor: color,
       fillOpacity: 0.85,
       weight: 2,
+      // NEW: glow class for critical/moderate nodes
+      className: isCritical ? 'node-critical-glow' : isModerate ? 'node-moderate-glow' : '',
     })
     .bindTooltip(tooltipHtml, { direction: 'top', offset: [0, -8] })
     .addTo(nodeLayer)
@@ -315,12 +317,14 @@ function renderLinks(links) {
                   : link.status === 'throttled' ? '#f59e0b'
                   : '#16a34a';
       const dashArray = link.status === 'throttled' ? '8,5' :
-                        link.status === 'closed'    ? '4,4' : null;
+                        link.status === 'closed'    ? '4,4' : '16, 8'; // UPDATED: animated dash for open links
+      const className = link.status === 'open' ? 'flow-animated' : '';  // NEW: CSS flow animation
       L.polyline([[from.lat, from.lng], [to.lat, to.lng]], {
         color,
         weight: link.status === 'open' ? 3 : 2.5,
         dashArray,
         opacity: link.status === 'closed' ? 0.7 : 1,
+        className,  // NEW
       })
       .bindTooltip(`${link.id}: ${link.from}→${link.to} | ${link.status} | flow: ${(link.flow * 100).toFixed(0)}%`)
       .addTo(linkLayer);
@@ -565,13 +569,34 @@ function showDeploymentAlerts(alerts) {
 // =========================
 // AI PANEL
 // =========================
+// UPDATED: rich recommendation cards with colour-coding
 function updateAI(ai) {
   const list = document.getElementById('aiList');
   if (!list) return;
   list.innerHTML = '';
+
+  // Severity keywords sourced from server.js generateAiRecommendations()
+  const DANGER_SIGNALS  = ['❌', 'critical', 'block', 're-treatment', 'quality critical'];
+  const WARNING_SIGNALS = ['⚠️', '⚡', 'approaching', 'exceed', 'throttle', 'over capacity', 'low'];
+
   (ai.recommendations || []).forEach(r => {
+    const rLower = r.toLowerCase();
+    const isDanger  = DANGER_SIGNALS.some(s => r.includes(s) || rLower.includes(s.toLowerCase()));
+    const isWarning = !isDanger && WARNING_SIGNALS.some(s => r.includes(s) || rLower.includes(s.toLowerCase()));
+
+    const typeClass = isDanger  ? 'ai-rec-danger'
+                    : isWarning ? 'ai-rec-warning'
+                    : 'ai-rec-ok';
+    const icon = isDanger  ? 'fa-circle-xmark'
+               : isWarning ? 'fa-triangle-exclamation'
+               : 'fa-circle-check';
+
     const li = document.createElement('li');
-    li.textContent = r;
+    li.innerHTML = `
+      <div class="ai-rec-card ${typeClass}">
+        <i class="fa-solid ${icon} ai-rec-icon"></i>
+        <span class="ai-rec-body">${r}</span>
+      </div>`;
     list.appendChild(li);
   });
 }

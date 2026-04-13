@@ -1,50 +1,30 @@
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  text-transform: capitalize;
-  border: 1px solid rgba(255,255,255,0.22);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
 }
 
-.badge-safe {
-  background: rgba(5,150,105,0.18);
-  color: var(--safe);
-  border-color: rgba(5,150,105,0.28);
-  box-shadow:
-    0 8px 18px rgba(5,150,105,0.18),
-    0 0 0 3px rgba(5,150,105,0.10),
-    inset 0 1px 0 rgba(255,255,255,0.28);
+#deploymentMap .leaflet-pane,
+#deploymentMap .leaflet-map-pane,
+#deploymentMap .leaflet-tile-pane,
+#deploymentMap .leaflet-overlay-pane,
+#deploymentMap .leaflet-marker-pane,
+#deploymentMap .leaflet-shadow-pane {
+  border-radius: inherit;
 }
 
-.badge-moderate {
-  background: rgba(217,119,6,0.18);
-  color: var(--mod);
-  border-color: rgba(217,119,6,0.30);
-  box-shadow:
-    0 8px 18px rgba(217,119,6,0.18),
-    0 0 0 3px rgba(217,119,6,0.10),
-    inset 0 1px 0 rgba(255,255,255,0.28);
+#deploymentMap {
+  width: 100%;
+  transition: height 0.3s, box-shadow 0.3s, transform 0.3s;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.9);
 }
 
-.badge-unsafe {
-  background: rgba(220,38,38,0.16);
-  color: var(--unsafe);
-  border-color: rgba(220,38,38,0.30);
-  box-shadow:
-    0 8px 18px rgba(220,38,38,0.18),
-    0 0 0 3px rgba(220,38,38,0.10),
-    inset 0 1px 0 rgba(255,255,255,0.28);
+#deploymentMap:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
 }
 
-.status-badge.status-badge--lg {
-  padding: 8px 14px;
-  font-size: 0.8rem;
+html.dark-mode #deploymentMap {
+  border-color: rgba(255, 255, 255, 0.5);
 }

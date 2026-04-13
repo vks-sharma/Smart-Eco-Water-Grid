@@ -574,12 +574,16 @@ function updateAI(ai) {
   const list = document.getElementById('aiList');
   if (!list) return;
   list.innerHTML = '';
-  (ai.recommendations || []).forEach(r => {
-    const li = document.createElement('li');
 
-    // Determine severity from content
-    const isDanger  = r.includes('❌') || /critical|block|re-treatment/i.test(r);
-    const isWarning = !isDanger && (r.includes('⚠️') || r.includes('⚡') || /approaching|exceed|throttle/i.test(r));
+  // Severity keywords sourced from server.js generateAiRecommendations()
+  const DANGER_SIGNALS  = ['❌', 'critical', 'block', 're-treatment', 'quality critical'];
+  const WARNING_SIGNALS = ['⚠️', '⚡', 'approaching', 'exceed', 'throttle', 'over capacity', 'low'];
+
+  (ai.recommendations || []).forEach(r => {
+    const rLower = r.toLowerCase();
+    const isDanger  = DANGER_SIGNALS.some(s => r.includes(s) || rLower.includes(s.toLowerCase()));
+    const isWarning = !isDanger && WARNING_SIGNALS.some(s => r.includes(s) || rLower.includes(s.toLowerCase()));
+
     const typeClass = isDanger  ? 'ai-rec-danger'
                     : isWarning ? 'ai-rec-warning'
                     : 'ai-rec-ok';
@@ -587,6 +591,7 @@ function updateAI(ai) {
                : isWarning ? 'fa-triangle-exclamation'
                : 'fa-circle-check';
 
+    const li = document.createElement('li');
     li.innerHTML = `
       <div class="ai-rec-card ${typeClass}">
         <i class="fa-solid ${icon} ai-rec-icon"></i>

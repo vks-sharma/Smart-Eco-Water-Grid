@@ -5,6 +5,11 @@ let tempChart      = null;
 let doChart        = null;
 let modalChart     = null;
 
+// NEW: Secondary analytics charts
+let qualityDoughnut    = null;
+let efficiencyDoughnut = null;
+let pollutionPie       = null;
+
 const PARAM_LABELS = {
   ph:              'pH',
   turbidity:       'Turbidity (NTU)',
@@ -157,6 +162,9 @@ function initDashboardCharts() {
   phChart        = createParamChart('phChart',        'ph',              'pH');
   tempChart      = createParamChart('tempChart',      'temperature',     'Temperature (°C)');
   doChart        = createParamChart('doChart',        'dissolvedOxygen', 'Dissolved O₂ (mg/L)');
+
+  // NEW: initialize secondary doughnut/pie charts
+  initSecondaryCharts();
 }
 
 function updateDashboardCharts(data) {
@@ -191,6 +199,9 @@ function updateDashboardCharts(data) {
   pushPoint(phChart,        data.ph,              'ph');
   pushPoint(tempChart,      data.temperature,     'temperature');
   pushPoint(doChart,        data.dissolvedOxygen, 'dissolvedOxygen');
+
+  // NEW: update secondary analytics charts
+  updateSecondaryCharts(data);
 }
 
 async function openParamModal(param) {
@@ -254,4 +265,164 @@ async function openParamModal(param) {
 function closeChartModal() {
   document.getElementById('chartModal').close();
   if (modalChart) { modalChart.destroy(); modalChart = null; }
+}
+
+// NEW: Secondary analytics charts ============================================
+
+function _doughnutOptions() {
+  const isDark = document.documentElement.classList.contains('dark-mode');
+  const tc = getTextColor();
+  return {
+    responsive:          true,
+    maintainAspectRatio: true,
+    cutout:              '70%',
+    animation:           { duration: 700, easing: 'easeInOutQuart' },
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          color:    tc,
+          font:     { size: 10, family: 'Inter, sans-serif', weight: '500' },
+          boxWidth: 10,
+          padding:  8,
+        },
+      },
+      tooltip: {
+        backgroundColor: isDark ? 'rgba(13,25,42,0.92)' : 'rgba(255,255,255,0.96)',
+        titleColor:      isDark ? '#e2e8f0' : '#0f172a',
+        bodyColor:       isDark ? '#94a3b8' : '#475569',
+        borderColor:     isDark ? 'rgba(8,145,178,0.3)' : 'rgba(226,232,240,0.8)',
+        borderWidth:     1,
+        cornerRadius:    8,
+      },
+    },
+  };
+}
+
+function initSecondaryCharts() {
+  if (typeof Chart === 'undefined') return;
+
+  // Destroy any existing instances
+  if (qualityDoughnut)    { qualityDoughnut.destroy();    qualityDoughnut    = null; }
+  if (efficiencyDoughnut) { efficiencyDoughnut.destroy(); efficiencyDoughnut = null; }
+  if (pollutionPie)       { pollutionPie.destroy();       pollutionPie       = null; }
+
+  const isDark = document.documentElement.classList.contains('dark-mode');
+  const borderClr = isDark ? 'rgba(13,25,42,0.85)' : 'rgba(255,255,255,0.85)';
+
+  // ── Water Quality Score doughnut ──────────────────────────────────────────
+  const qEl = document.getElementById('qualityDoughnutChart');
+  if (qEl) {
+    qualityDoughnut = new Chart(qEl.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels:   ['Safe', 'Moderate', 'Concern'],
+        datasets: [{
+          data:            [70, 20, 10],
+          backgroundColor: [
+            'rgba(5,150,105,0.82)',
+            'rgba(212,160,23,0.82)',
+            'rgba(220,38,38,0.82)',
+          ],
+          borderColor:  borderClr,
+          borderWidth:  2,
+          hoverOffset:  8,
+        }],
+      },
+      options: _doughnutOptions(),
+    });
+  }
+
+  // ── Treatment Efficiency doughnut ─────────────────────────────────────────
+  const eEl = document.getElementById('efficiencyDoughnutChart');
+  if (eEl) {
+    efficiencyDoughnut = new Chart(eEl.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels:   ['Efficient', 'Needs Attention'],
+        datasets: [{
+          data:            [80, 20],
+          backgroundColor: [
+            'rgba(8,145,178,0.82)',
+            'rgba(212,160,23,0.82)',
+          ],
+          borderColor:  borderClr,
+          borderWidth:  2,
+          hoverOffset:  8,
+        }],
+      },
+      options: _doughnutOptions(),
+    });
+  }
+
+  // ── Pollution Index doughnut ──────────────────────────────────────────────
+  const pEl = document.getElementById('pollutionPieChart');
+  if (pEl) {
+    pollutionPie = new Chart(pEl.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels:   ['Low', 'Moderate', 'High'],
+        datasets: [{
+          data:            [60, 30, 10],
+          backgroundColor: [
+            'rgba(5,150,105,0.82)',
+            'rgba(245,158,11,0.82)',
+            'rgba(220,38,38,0.82)',
+          ],
+          borderColor:  borderClr,
+          borderWidth:  2,
+          hoverOffset:  8,
+        }],
+      },
+      options: _doughnutOptions(),
+    });
+  }
+}
+
+function updateSecondaryCharts(data) {
+  if (!data || !AppState) return;
+
+  // Helper: classify param and return 100/50/0 score
+  function paramScore(param, value) {
+    if (value == null) return 50;
+    const s = AppState.classifyParam(param, value);
+    return s === 'safe' ? 100 : s === 'moderate' ? 50 : 0;
+  }
+
+  const allParams = ['ph', 'turbidity', 'temperature', 'dissolvedOxygen', 'conductivity', 'tds'];
+  const statuses  = allParams.map(p => AppState.classifyParam(p, data[p]));
+  const safeCount = statuses.filter(s => s === 'safe').length;
+  const modCount  = statuses.filter(s => s === 'moderate').length;
+  const badCount  = statuses.filter(s => s === 'unsafe').length;
+  const total     = allParams.length;
+
+  // ── Quality doughnut ──────────────────────────────────────────────────────
+  if (qualityDoughnut) {
+    qualityDoughnut.data.datasets[0].data = [
+      Math.round((safeCount / total) * 100),
+      Math.round((modCount  / total) * 100),
+      Math.round((badCount  / total) * 100) || 0,
+    ];
+    qualityDoughnut.update('active');
+  }
+
+  // ── Efficiency doughnut (DO + conductivity as proxy) ─────────────────────
+  if (efficiencyDoughnut) {
+    const eff = Math.round((paramScore('dissolvedOxygen', data.dissolvedOxygen) +
+                            paramScore('conductivity',    data.conductivity)) / 2);
+    efficiencyDoughnut.data.datasets[0].data = [eff, Math.max(0, 100 - eff)];
+    efficiencyDoughnut.update('active');
+  }
+
+  // ── Pollution index (turbidity + TDS + pH) ────────────────────────────────
+  if (pollutionPie) {
+    const pollStatuses = ['turbidity', 'tds', 'ph', 'dissolvedOxygen'].map(
+      p => AppState.classifyParam(p, data[p])
+    );
+    const low  = Math.max(pollStatuses.filter(s => s === 'safe').length,     0.01);
+    const med  = Math.max(pollStatuses.filter(s => s === 'moderate').length, 0.01);
+    const high = Math.max(pollStatuses.filter(s => s === 'unsafe').length,   0.01);
+    pollutionPie.data.datasets[0].data = [low, med, high];
+    pollutionPie.update('active');
+  }
 }

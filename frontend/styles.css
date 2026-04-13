@@ -1775,3 +1775,181 @@ dialog::backdrop {
 .text-safe     { color: var(--safe); }
 .text-moderate { color: var(--mod); }
 .text-unsafe   { color: var(--unsafe); }
+
+/* =========================
+   NEW: GOLD DESIGN TOKENS
+========================= */
+:root {
+  --gold-500:  #d4a017;
+  --gold-400:  #f5c842;
+  --gold-300:  #fde68a;
+  --gold-glow: rgba(212,160,23,0.35);
+}
+html.dark-mode {
+  --gold-glow: rgba(212,160,23,0.45);
+}
+
+/* =========================
+   NEW: GLASS-CARD UTILITY
+   Shared base for all glass panels — apply as additional class
+========================= */
+.glass-card {
+  background:           var(--glass-bg);
+  border:               1px solid var(--glass-border);
+  border-radius:        var(--r-lg);
+  box-shadow:           var(--glass-shadow);
+  backdrop-filter:      blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition:           transform var(--t), box-shadow var(--t), border-color var(--t);
+}
+
+/* =========================
+   NEW: GOLD HOVER UTILITY
+========================= */
+.gold-hover {
+  transition: transform var(--t), box-shadow var(--t), border-color var(--t);
+}
+.gold-hover:hover {
+  transform:   translateY(-4px) scale(1.02);
+  box-shadow:  0 0 28px var(--gold-glow), 0 8px 32px rgba(212,160,23,0.15), var(--shadow-lg);
+  border-color: rgba(212,160,23,0.45);
+}
+
+/* =========================
+   NEW: CARD GOLD HOVER UPGRADE
+   Override box-shadow / border-color on existing .card and .chart-card hover
+========================= */
+.card:hover {
+  border-color: rgba(212,160,23,0.45);
+  box-shadow:   0 0 28px var(--gold-glow), 0 8px 32px rgba(212,160,23,0.12), var(--shadow-lg);
+}
+.chart-card:hover {
+  border-color: rgba(212,160,23,0.35);
+  box-shadow:   0 0 20px var(--gold-glow), var(--shadow-lg);
+}
+
+/* =========================
+   NEW: SIDEBAR — GOLD ACTIVE INDICATOR
+========================= */
+/* Override the existing cyan gradient bar with gold */
+.nav-item.active::after {
+  background: linear-gradient(180deg, var(--gold-400), var(--gold-300));
+  box-shadow:  0 0 10px rgba(245,200,66,0.7);
+}
+/* Brand icon: add gold shimmer */
+.brand-icon {
+  background: linear-gradient(135deg, var(--brand-500), var(--gold-400));
+  box-shadow:  0 4px 16px var(--gold-glow);
+}
+html.dark-mode .brand-icon {
+  background: linear-gradient(135deg, var(--brand-600), var(--gold-500));
+}
+
+/* =========================
+   NEW: BUTTON GOLD HOVER UPGRADE
+========================= */
+.btn-primary:hover:not(:disabled) {
+  box-shadow:   0 8px 28px var(--gold-glow), 0 4px 16px rgba(212,160,23,0.18);
+  border-color: rgba(212,160,23,0.35);
+}
+
+/* =========================
+   NEW: SECONDARY CHARTS ROW
+========================= */
+.charts-row-secondary {
+  margin-top: 6px;
+}
+.charts-row-secondary .chart-card canvas {
+  max-height: 220px;
+  padding: 14px 12px 8px;
+}
+
+/* =========================
+   NEW: AI RECOMMENDATION CARDS
+========================= */
+/* Remove old bullet marker from li items that use the new card */
+#aiList li:has(.ai-rec-card)::before { content: none; }
+#aiList li:has(.ai-rec-card) {
+  padding-left: 0;
+  margin-bottom: 6px;
+}
+
+.ai-rec-card {
+  display:       flex;
+  align-items:   flex-start;
+  gap:           10px;
+  padding:       10px 14px;
+  border-radius: var(--r-sm);
+  border:        1px solid transparent;
+  transition:    transform var(--t), box-shadow var(--t);
+  font-size:     0.85rem;
+  line-height:   1.45;
+}
+.ai-rec-card:hover {
+  transform:  translateX(4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.ai-rec-icon {
+  font-size:  0.95rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.ai-rec-body {
+  color: var(--text-1);
+  flex:  1;
+}
+
+/* OK / Good state */
+.ai-rec-ok {
+  background:  rgba(5,150,105,0.08);
+  border-color: rgba(5,150,105,0.25);
+  border-left:  3px solid var(--safe);
+}
+.ai-rec-ok .ai-rec-icon { color: var(--safe); }
+
+/* Warning state */
+.ai-rec-warning {
+  background:  rgba(212,160,23,0.08);
+  border-color: rgba(212,160,23,0.25);
+  border-left:  3px solid var(--gold-500);
+}
+.ai-rec-warning .ai-rec-icon { color: var(--gold-400); }
+
+/* Danger state */
+.ai-rec-danger {
+  background:  rgba(220,38,38,0.08);
+  border-color: rgba(220,38,38,0.25);
+  border-left:  3px solid var(--unsafe);
+  animation:   ai-danger-pulse 2s ease-in-out infinite;
+}
+.ai-rec-danger .ai-rec-icon { color: var(--unsafe); }
+
+@keyframes ai-danger-pulse {
+  0%, 100% { box-shadow: none; }
+  50%       { box-shadow: 0 0 12px rgba(220,38,38,0.2); }
+}
+
+/* =========================
+   NEW: MAP — NODE GLOW CLASSES
+========================= */
+.node-critical-glow {
+  animation: node-critical-glow-anim 1.5s ease-in-out infinite;
+}
+@keyframes node-critical-glow-anim {
+  0%, 100% { filter: drop-shadow(0 0 5px rgba(220,38,38,0.55)); }
+  50%       { filter: drop-shadow(0 0 14px rgba(220,38,38,0.9)); }
+}
+.node-moderate-glow {
+  filter: drop-shadow(0 0 6px rgba(212,160,23,0.65));
+}
+
+/* =========================
+   NEW: MAP — ANIMATED FLOW LINES
+========================= */
+.flow-animated {
+  animation: flow-dash-anim 2s linear infinite;
+}
+@keyframes flow-dash-anim {
+  from { stroke-dashoffset: 24; }
+  to   { stroke-dashoffset: 0; }
+}

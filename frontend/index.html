@@ -25,28 +25,34 @@
 
 <body>
 
+<!-- MOBILE OVERLAY -->
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
 <!-- SIDEBAR -->
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
   <div class="sidebar-brand">
     <div class="brand-icon"><i class="fa-solid fa-water"></i></div>
     <div class="brand-text">
       <span class="brand-name">Smart Eco-Water Grid</span>
       <span class="brand-sub">System Status</span>
     </div>
+    <button class="sidebar-close-btn" onclick="closeSidebar()" title="Close sidebar">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
   </div>
 
   <nav class="sidebar-nav">
     <a class="nav-item" data-section="dashboard" onclick="showSection('dashboard')">
       <i class="fa-solid fa-gauge-high nav-icon"></i>
-      <span>Dashboard</span>
+      <span class="nav-label">Dashboard</span>
     </a>
     <a class="nav-item" data-section="deployment" onclick="showSection('deployment')">
       <i class="fa-solid fa-map-location-dot nav-icon"></i>
-      <span>Deployment</span>
+      <span class="nav-label">Deployment</span>
     </a>
     <a class="nav-item" data-section="settings" onclick="showSection('settings')">
       <i class="fa-solid fa-sliders nav-icon"></i>
-      <span>Settings</span>
+      <span class="nav-label">Settings</span>
     </a>
   </nav>
 
@@ -57,30 +63,51 @@
     </div>
     <a id="loginBtn" class="nav-item nav-item-sm" onclick="openLoginModal()">
       <i class="fa-solid fa-right-to-bracket nav-icon"></i>
-      <span>Login</span>
+      <span class="nav-label">Login</span>
     </a>
     <a id="logoutBtn" class="nav-item nav-item-sm" onclick="doLogout()" style="display:none">
       <i class="fa-solid fa-right-from-bracket nav-icon"></i>
-      <span>Sign Out</span>
+      <span class="nav-label">Sign Out</span>
     </a>
   </div>
 </aside>
 
 <!-- MAIN -->
-<div class="main">
+<div class="main" id="mainContent">
 
   <!-- TOP BAR -->
   <header class="topbar">
     <div class="topbar-left">
-      <h1 class="topbar-title">Smart Eco-Water Grid</h1>
-      <p class="topbar-sub">Nature-Based Wastewater Treatment Grid</p>
+      <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar" id="sidebarToggle">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <div>
+        <h1 class="topbar-title">Smart Eco-Water Grid</h1>
+        <p class="topbar-sub">Nature-Based Wastewater Treatment Grid</p>
+      </div>
     </div>
     <div class="topbar-right">
       <div class="topbar-status">
         <span class="status-dot live"></span>
         <span class="status-label">Live Monitoring</span>
       </div>
-      <button onclick="toggleTheme()" id="themeBtn" class="theme-btn" title="Toggle dark mode">
+      <!-- Notification Bell -->
+      <div class="notif-bell-wrap" id="notifBellWrap">
+        <button class="notif-bell-btn" onclick="toggleNotifDropdown()" id="notifBellBtn" title="Notifications">
+          <i class="fa-solid fa-bell"></i>
+          <span class="notif-badge" id="notifBadge" style="display:none">0</span>
+        </button>
+        <div class="notif-dropdown" id="notifDropdown" style="display:none">
+          <div class="notif-dropdown-header">
+            <span>Alerts</span>
+            <button onclick="clearAlertLog()" class="btn-sm notif-clear-btn"><i class="fa-solid fa-trash-can"></i> Clear</button>
+          </div>
+          <div id="notifDropdownList" class="notif-dropdown-list">
+            <p class="no-alerts">No alerts yet.</p>
+          </div>
+        </div>
+      </div>
+      <button onclick="toggleTheme()" id="themeBtn" class="theme-btn" title="Toggle theme">
         <i class="fa-solid fa-moon"></i>
       </button>
     </div>
@@ -275,13 +302,16 @@
 </div>
 
 <!-- NODE PANEL (slide-in) -->
-<div id="nodePanel" class="node-panel" style="display:none">
+<div id="nodePanel" class="node-panel">
   <div class="node-panel-header">
     <h3 id="nodePanelTitle">Node</h3>
     <button onclick="closeNodePanel()" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
   </div>
   <div id="nodePanelBody"></div>
 </div>
+
+<!-- TOAST CONTAINER -->
+<div id="toastContainer" class="toast-container"></div>
 
 <!-- CHART MODAL -->
 <dialog id="chartModal" class="chart-modal">

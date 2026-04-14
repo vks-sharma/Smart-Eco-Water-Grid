@@ -162,6 +162,34 @@ The project includes a working prototype with:
 
 ---
 
+## ⚙️ Setup & Run
+
+### 1. Install dependencies
+```bash
+npm install
+```
+
+### 2. Configure environment
+Copy the example env file:
+```bash
+cp .env.example .env
+```
+The default values in `.env.example` work for local development.
+
+### 3. Start the server
+```bash
+npm start
+```
+
+### 4. (Optional) Run IoT simulator in a second terminal
+```bash
+node iot/simulate.js
+```
+
+Open `http://localhost:3000` in your browser.
+
+---
+
 ## 🛠️ Tech Stack
 
 - **Backend:** Node.js (Express)  
@@ -178,27 +206,29 @@ smart-eco-water-grid/
 ├── ai/ # Decision logic
 ├── iot/ # Sensor simulation
 ├── frontend/ # Dashboard UI
-├── config/ # Constants and configs
+├── confg/ # Constants and configs
 
 ---
 
 ## 🚧 Current Status
 
-🔨 Prototype in development  
-📡 Backend + AI + simulation in progress  
+✅ Backend API complete and running
+✅ AI classification and auto-routing active
+✅ IoT sensor simulation running
+✅ Frontend dashboard live
 
 ---
 
 ## 🧑‍💻 Author
 
-**Name:** [YOUR NAME HERE]  
+**Name:** VKS  
 **Role:** Developer / Researcher  
 
 ---
 
 ## 📽️ Demo Video
 
-👉 [ADD LINK HERE AFTER RECORDING]
+👉 Demo video coming soon
 
 
 ---

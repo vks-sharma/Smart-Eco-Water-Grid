@@ -24,12 +24,6 @@ async function submitLogin(e) {
   const password = document.getElementById('loginPassword').value;
   const errEl    = document.getElementById('loginError');
 
-  // Demo login — frontend-only fallback, no backend required
-  if (username === 'vks' && password === '1234') {
-    _demoLogin();
-    return;
-  }
-
   try {
     const res = await fetch('/auth/login', {
       method: 'POST',
@@ -43,12 +37,7 @@ async function submitLogin(e) {
     updateAuthUI();
     closeLoginModal();
   } catch {
-    // Network/server unavailable — fall back to demo login silently
-    if (username === 'vks' && password === '1234') {
-      _demoLogin();
-    } else {
-      errEl.textContent = 'Network error. Please try again.';
-    }
+    errEl.textContent = 'Network error. Please try again.';
   }
 }
 

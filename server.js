@@ -131,7 +131,8 @@ function autoRoute() {
   return events;
 }
 
-// ── Routes ─────────────────────────────────────────────────────────────────────app.use('/auth',     require('./routes/auth'));
+// ── Routes ─────────────────────────────────────────────────────────────────────
+app.use('/auth',     require('./routes/auth'));
 app.use('/settings', require('./routes/settings').router);
 app.use('/nodes',    require('./routes/nodes'));
 

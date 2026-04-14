@@ -237,8 +237,12 @@ function initMap() {
 // =========================
 function loadDeployment() {
   fetch('/deployment-status')
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) return null;
+      return res.json();
+    })
     .then(data => {
+      if (!data) return;
       renderNodes(data.nodes);
       renderLinks(data.links);
       updateAI(data.ai);

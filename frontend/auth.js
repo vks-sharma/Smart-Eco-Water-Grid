@@ -9,11 +9,26 @@ function closeLoginModal() {
   document.getElementById('loginModal').close();
 }
 
+// Demo login — sets localStorage flags so state persists after reload
+function _demoLogin() {
+  localStorage.setItem('isLoggedIn', 'true');
+  localStorage.setItem('user', 'Admin');
+  AppState.login('Admin', 'admin', 'demo');
+  updateAuthUI();
+  closeLoginModal();
+}
+
 async function submitLogin(e) {
   e.preventDefault();
   const username = document.getElementById('loginUsername').value.trim();
   const password = document.getElementById('loginPassword').value;
   const errEl    = document.getElementById('loginError');
+
+  // Demo login — frontend-only fallback, no backend required
+  if (username === 'vks' && password === '1234') {
+    _demoLogin();
+    return;
+  }
 
   try {
     const res = await fetch('/auth/login', {
@@ -28,12 +43,19 @@ async function submitLogin(e) {
     updateAuthUI();
     closeLoginModal();
   } catch {
-    errEl.textContent = 'Network error. Please try again.';
+    // Network/server unavailable — fall back to demo login silently
+    if (username === 'vks' && password === '1234') {
+      _demoLogin();
+    } else {
+      errEl.textContent = 'Network error. Please try again.';
+    }
   }
 }
 
 function doLogout() {
   AppState.logout();
+  localStorage.removeItem('isLoggedIn');
+  localStorage.removeItem('user');
   updateAuthUI();
 }
 
@@ -46,9 +68,11 @@ function updateAuthUI() {
     userNameEl.textContent = AppState.user.username;
     loginBtn.style.display  = 'none';
     logoutBtn.style.display = 'block';
+    document.body.classList.add('logged-in');
   } else {
     userNameEl.textContent  = 'Guest';
     loginBtn.style.display  = 'block';
     logoutBtn.style.display = 'none';
+    document.body.classList.remove('logged-in');
   }
 }

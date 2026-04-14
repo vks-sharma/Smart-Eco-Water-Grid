@@ -374,14 +374,29 @@ function renderLinkControls(links) {
 }
 
 async function controlLink(linkId, action) {
+  if (!AppState.getToken() || AppState.getToken() === 'demo') {
+    showToast('Please log in to control links.', 'warning', 4000);
+    openLoginModal();
+    return;
+  }
+
   try {
     const res  = await fetch('/deployment-control', {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': 'Bearer ' + AppState.getToken()
+      },
       body:    JSON.stringify({ linkId, action }),
     });
     const data = await res.json();
-    if (!res.ok) { console.error('Control error:', data.error); return; }
+    if (!res.ok) {
+      const msg = res.status === 401
+        ? 'Login required to control links.'
+        : (data.error || 'Control action failed.');
+      showToast(msg, 'error', 4000);
+      return;
+    }
     const actionLabels = { stop: 'Stopped', transfer: 'Opened', retain: 'Throttled' };
     const msg = `Manual: ${actionLabels[action] || action} link ${linkId}`;
     AppState.addAlert(msg, 'info');
@@ -391,6 +406,7 @@ async function controlLink(linkId, action) {
     loadDeployment();
   } catch (err) {
     console.error('controlLink error:', err);
+    showToast('Network error — could not apply control.', 'error', 4000);
   }
 }
 

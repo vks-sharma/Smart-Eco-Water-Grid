@@ -1,4 +1,5 @@
 'use strict';
+require('dotenv').config();
 
 const express = require('express');
 const cors    = require('cors');
@@ -29,6 +30,7 @@ const deploymentLinks = nodesConfig.links;
 
 // ── Thresholds helper ──────────────────────────────────────────────────────────
 const { loadThresholds } = require('./routes/settings');
+const { requireAuth } = require('./middleware/auth');
 
 function classifyParam(param, value) {
   if (value == null) return 'unknown';
@@ -268,7 +270,7 @@ app.get('/deployment-status', (req, res) => {
   });
 });
 
-app.post('/deployment-control', (req, res) => {
+app.post('/deployment-control', requireAuth, (req, res) => {
   const { linkId, action } = req.body;
   if (!linkId || !action) {
     return res.status(400).json({ error: 'linkId and action are required.' });

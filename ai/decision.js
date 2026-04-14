@@ -1,3 +1,16 @@
+/**
+ * AI Decision Module — Smart Eco-Water Grid
+ *
+ * Standalone water quality classification engine.
+ * Provides analyzeWaterQuality(), sensorDataListener(), and sensorDataStore.
+ *
+ * This module is designed to be imported into any consumer that needs
+ * event-driven sensor processing. The core server uses an inline version
+ * of the classification logic for performance; this module is the
+ * standalone, testable reference implementation.
+ *
+ * To integrate: const { sensorDataListener } = require('./ai/decision');
+ */
 const EventEmitter = require('events');
 
 const sensorDataEventEmitter = new EventEmitter();

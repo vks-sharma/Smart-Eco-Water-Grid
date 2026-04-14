@@ -1815,12 +1815,32 @@ dialog::backdrop {
 ========================= */
 .gold-hover {
   position: relative;
-  transition: transform var(--t), box-shadow var(--t), border-color var(--t);
+  border-radius: 14px;
+  transition: all 0.3s ease;
 }
 .gold-hover:hover {
-  transform:    translateY(-3px) scale(1.02);
-  border-color: var(--gold-400);
-  box-shadow:   0 10px 25px rgba(0,0,0,0.38), 0 0 12px var(--gold-glow);
+  border: 1px solid var(--gold-400);
+  box-shadow:
+    0 0 8px rgba(245,200,66,0.6),
+    0 0 20px rgba(245,200,66,0.4),
+    0 0 40px rgba(245,200,66,0.2);
+  transform: translateY(-3px) scale(1.02);
+}
+/* Animated shine pseudo-element */
+.gold-hover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  padding: 1px;
+  background: linear-gradient(120deg, transparent, rgba(245,200,66,0.8), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: -1;
+}
+.gold-hover:hover::before {
+  opacity: 1;
 }
 /* Nav items slide horizontally, not up */
 .nav-item.gold-hover:hover {
@@ -1855,14 +1875,39 @@ html.dark-mode .brand-icon {
 }
 
 /* =========================
+   NEW: LOGGED-IN ADVANTAGES
+   Elements with .locked are disabled for guests;
+   adding .logged-in to <body> unlocks them via CSS.
+========================= */
+body:not(.logged-in) .locked {
+  opacity: 0.45;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+.logged-in .locked {
+  opacity: 1;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* =========================
    NEW: SECONDARY CHARTS ROW
 ========================= */
 .charts-row-secondary {
   margin-top: 6px;
 }
+.charts-row-secondary .chart-card {
+  display: flex;
+  flex-direction: column;
+}
 .charts-row-secondary .chart-card canvas {
-  max-height: 220px;
-  padding: 14px 12px 8px;
+  flex: 1;
+  display: block;
+  height: 220px !important;
+  max-width: 100% !important;
+  max-height: 220px !important;
+  padding: 8px;
+  margin: 0 auto;
 }
 
 /* =========================

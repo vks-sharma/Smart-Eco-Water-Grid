@@ -23,6 +23,12 @@ const AppState = {
         }
       } catch { sessionStorage.removeItem('authToken'); }
     }
+
+    // Restore demo login from localStorage (survives page reload)
+    if (!this.user && localStorage.getItem('isLoggedIn') === 'true') {
+      const savedUser = localStorage.getItem('user') || 'Admin';
+      this.user = { username: savedUser, role: 'admin', token: 'demo' };
+    }
   },
 
   setDarkMode(on) {

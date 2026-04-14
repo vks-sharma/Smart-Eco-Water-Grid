@@ -274,8 +274,9 @@ function _doughnutOptions() {
   const tc = getTextColor();
   return {
     responsive:          true,
-    maintainAspectRatio: true,
+    maintainAspectRatio: false,
     cutout:              '70%',
+    layout:              { padding: 0 },
     animation:           { duration: 700, easing: 'easeInOutQuart' },
     plugins: {
       legend: {

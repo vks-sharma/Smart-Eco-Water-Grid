@@ -26,7 +26,7 @@
   --glass-shadow: 0 8px 32px rgba(11,31,77,0.28);
 
   /* Neutrals */
-  --bg:        linear-gradient(135deg, #0b1f4d 0%, #122b6a 50%, #1a3c8b 100%);
+  --bg:        linear-gradient(135deg, #1a2f6a 0%, #243c84 50%, #2f4fa0 100%);
   --surface:   rgba(18, 29, 80, 0.88);
   --surface-2: rgba(26, 40, 100, 0.72);
   --border:    rgba(90, 140, 255, 0.22);
@@ -242,9 +242,9 @@ html.dark-mode .sidebar {
 }
 
 .nav-item:hover {
-  background: rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.03);
   color: var(--gold-400);
-  border-left: 3px solid var(--gold-400);
+  border-left: 2px solid #f5c842;
   transform: translateX(3px);
 }
 
@@ -689,8 +689,8 @@ html.dark-mode .notif-dropdown {
 }
 
 .card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: rgba(10, 20, 60, 0.6);
+  border: none;
   border-radius: var(--r-lg);
   padding: 18px 16px;
   display: flex;
@@ -698,11 +698,11 @@ html.dark-mode .notif-dropdown {
   gap: 14px;
   cursor: pointer;
   transition: transform var(--t), box-shadow var(--t), border-color var(--t), background var(--t);
-  box-shadow: var(--glass-shadow);
+  box-shadow: none;
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   min-width: 180px;
 }
 
@@ -727,9 +727,8 @@ html.dark-mode .notif-dropdown {
 }
 
 .card:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: var(--shadow-glow);
-  border-color: var(--brand-400);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
 }
 
 .card:hover::after {
@@ -959,11 +958,11 @@ html.dark-mode .notification-banner.danger {
 }
 
 .chart-card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: rgba(20, 30, 80, 0.55);
+  border: none;
   border-radius: var(--r-lg);
   overflow: hidden;
-  box-shadow: var(--glass-shadow);
+  box-shadow: none;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   transition: transform var(--t), box-shadow var(--t);
@@ -971,7 +970,7 @@ html.dark-mode .notification-banner.danger {
 
 .chart-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-glow);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
 }
 
 .chart-card-header {
@@ -994,9 +993,15 @@ html.dark-mode .notification-banner.danger {
 
 .chart-card canvas {
   display: block;
-  padding: 12px;
+  padding: 10px;
   width: 100%;
   min-height: 220px;
+}
+
+.chart-container {
+  padding: 10px;
+  border-radius: 12px;
+  background: transparent;
 }
 
 canvas {
@@ -1817,30 +1822,15 @@ dialog::backdrop {
   position: relative;
   border-radius: 14px;
   transition: all 0.3s ease;
+  border: 1px solid transparent;
+  background-clip: padding-box;
 }
 .gold-hover:hover {
-  border: 1px solid var(--gold-400);
+  border: 1px solid #f5c842;
   box-shadow:
-    0 0 8px rgba(245,200,66,0.6),
-    0 0 20px rgba(245,200,66,0.4),
-    0 0 40px rgba(245,200,66,0.2);
-  transform: translateY(-3px) scale(1.02);
-}
-/* Animated shine pseudo-element */
-.gold-hover::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 14px;
-  padding: 1px;
-  background: linear-gradient(120deg, transparent, rgba(245,200,66,0.8), transparent);
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-  z-index: -1;
-}
-.gold-hover:hover::before {
-  opacity: 1;
+    0 0 0 1px #f5c842,
+    0 0 10px rgba(245,200,66,0.5);
+  transform: translateY(-2px);
 }
 /* Nav items slide horizontally, not up */
 .nav-item.gold-hover:hover {

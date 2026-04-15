@@ -99,7 +99,8 @@ The open-source stack and nature-based treatment approach means this system can 
 ### 📊 Dashboard — Live Sensor Monitoring
 Real-time readings across all 6 water quality parameters. The AI instantly classifies water status and surfaces a recommended action for operators.
 
-![Dashboard](screenshots/dashboard.jpeg)
+![Dashbord]<img width="1366" height="645" alt="WhatsApp Image 2026-04-14 at 12 50 27 (2)" src="https://github.com/user-attachments/assets/d57b4702-f6d4-4490-a989-a65f9a49639c" />
+
 
 ---
 

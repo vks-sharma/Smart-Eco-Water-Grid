@@ -99,7 +99,7 @@ The open-source stack and nature-based treatment approach means this system can 
 ### 📊 Dashboard — Live Sensor Monitoring
 Real-time readings across all 6 water quality parameters. The AI instantly classifies water status and surfaces a recommended action for operators.
 
-![Dashbord]<img width="1366" height="645" alt="WhatsApp Image 2026-04-14 at 12 50 27 (2)" src="https://github.com/user-attachments/assets/d57b4702-f6d4-4490-a989-a65f9a49639c" />
+<img width="1366" height="645" alt="WhatsApp Image 2026-04-14 at 12 50 27 (2)" src="https://github.com/user-attachments/assets/d57b4702-f6d4-4490-a989-a65f9a49639c" />
 
 
 ---
@@ -107,23 +107,23 @@ Real-time readings across all 6 water quality parameters. The AI instantly class
 ### 🗺️ Deployment Map — Node & Link Visualisation
 An interactive map showing residential clusters (blue), wetland STPs (green/orange), and live water-flow links. Click any node to inspect its live sensor readings.
 
-![Deployment Map](screenshots/deployment-map.jpeg)
+<img width="1366" height="649" alt="WhatsApp Image 2026-04-14 at 12 50 43" src="https://github.com/user-attachments/assets/3f9a9c72-ea14-4b92-a851-96f67133a6f8" />
+
 
 ---
 
 ### ⚙️ Deployment Panel — AI Recommendations & Link Controls
 AI-generated capacity alerts (e.g. "Wetland STP 1: Flow 72% approaching capacity") alongside manual override controls for every flow link — Open, Throttle, or Stop.
 
-![Deployment Panel](screenshots/deployment-panel.jpeg)
+<img width="1366" height="649" alt="WhatsApp Image 2026-04-14 at 12 50 27 (1)" src="https://github.com/user-attachments/assets/aa089cab-d91c-4193-8cc5-dc12f8531ac7" />
+
 
 ---
 
 ### 🔧 Settings — Alert Threshold Configuration
 Admins can fine-tune the safe/moderate/unsafe thresholds for each sensor parameter live from the UI. Changes take effect immediately — no server restart required.
 
-![Settings](screenshots/settings.jpeg)
-
-> **📁 To display screenshots on GitHub:** Create a `screenshots/` folder in the repo root and upload the four images with filenames `dashboard.jpeg`, `deployment-map.jpeg`, `deployment-panel.jpeg`, and `settings.jpeg`.
+<img width="1366" height="645" alt="WhatsApp Image 2026-04-14 at 12 50 27" src="https://github.com/user-attachments/assets/be485e72-0bf3-4d17-a700-2df04700be7c" />
 
 ---
 

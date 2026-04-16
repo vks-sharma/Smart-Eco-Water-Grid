@@ -295,6 +295,48 @@ app.get('/alerts', (req, res) => {
   return res.status(200).json(alertHistory.slice(0, limit));
 });
 
+// ─── SAFE BACKGROUND SIMULATION (FIXED FOR YOUR SYSTEM) ─────────
+
+function startSimulation() {
+  setInterval(() => {
+    try {
+      const ph = Number((6 + Math.random() * 3).toFixed(2));
+      const turbidity = Number((Math.random() * 10).toFixed(2));
+
+      const reading = {
+        sensorId: "sim-safe",
+        ph,
+        turbidity,
+        temperature: null,
+        dissolvedOxygen: null,
+        conductivity: null,
+        tds: null,
+        timestamp: new Date().toISOString(),
+      };
+
+      const { status, action } = analyzeWaterQuality(reading);
+      reading.status = status;
+      reading.action = action;
+
+      // ✅ correct storage (matches your architecture)
+      latestByNode.set("sim-safe", reading);
+
+      if (!nodeHistory.has("sim-safe")) {
+        nodeHistory.set("sim-safe", []);
+      }
+
+      const hist = nodeHistory.get("sim-safe");
+      hist.push(reading);
+
+      if (hist.length > NODE_HISTORY_CAP) hist.shift();
+
+      console.log("Simulated:", reading);
+
+    } catch (err) {
+      console.error("Simulation error:", err.message);
+    }
+  }, 5000);
+}
 // ── Start ──────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`Smart Eco-Water Grid API running on http://localhost:${PORT}`);

@@ -295,9 +295,33 @@ app.get('/alerts', (req, res) => {
   return res.status(200).json(alertHistory.slice(0, limit));
 });
 
+// ─── AUTO IOT SIMULATION FOR DEPLOYMENT ─────────────────────────
+
+function startSimulation() {
+  setInterval(() => {
+    const ph = Number((6 + Math.random() * 3).toFixed(2));
+    const turbidity = Number((Math.random() * 10).toFixed(2));
+
+    const { status, action } = analyzeWaterQuality(ph, turbidity);
+
+    latestData = {
+      sensorId: "sim-1",
+      ph,
+      turbidity,
+      status,
+      action,
+      timestamp: new Date().toISOString()
+    };
+
+    history.push(latestData);
+    if (history.length > 50) history.shift();
+
+    console.log("Simulated Data:", latestData);
+  }, 5000);
+}
 // ── Start ──────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`Smart Eco-Water Grid API running on http://localhost:${PORT}`);
+   console.log(`Smart Eco-Water Grid API running on http://localhost:${PORT}`);
 });
 
 module.exports = app;

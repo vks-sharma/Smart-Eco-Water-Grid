@@ -13,6 +13,16 @@
 [![SDG 11](https://img.shields.io/badge/UN%20SDG-11%20Sustainable%20Cities-E67E22)](https://sdgs.un.org/goals/goal11)
 
 ---
+## 🌐 Live Demo
+
+🔗 **https://smart-eco-water-grid.onrender.com**
+
+🚀 Explore the system in real time:
+- View live IoT sensor data across multiple nodes  
+- Click nodes on the deployment map to inspect readings  
+- Observe AI-driven water quality classification and routing  
+
+⚠️ Note: Data is generated using an integrated IoT simulation engine.
 
 ## Table of Contents
 

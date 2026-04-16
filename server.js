@@ -156,15 +156,18 @@ app.post('/sensor-data', (req, res) => {
   }
 
   const reading = {
-    sensorId:        sensorId || 'sensor-unknown',
-    ph,
-    turbidity,
-    temperature:     temperature     || null,
-    dissolvedOxygen: dissolvedOxygen || null,
-    conductivity:    conductivity    || null,
-    tds:             tds             || null,
-    timestamp:       timestamp       || new Date().toISOString(),
-  };
+  sensorId: "sim-safe",
+  ph,
+  turbidity,
+
+  // 🔥 NEW realistic simulation values
+  temperature: Number((20 + Math.random() * 10).toFixed(2)),      // 20–30°C
+  dissolvedOxygen: Number((4 + Math.random() * 4).toFixed(2)),   // 4–8 mg/L
+  conductivity: Number((200 + Math.random() * 300).toFixed(2)),  // 200–500 µS/cm
+  tds: Number((100 + Math.random() * 400).toFixed(2)),           // 100–500 ppm
+
+  timestamp: new Date().toISOString(),
+};
 
   const { status, action } = analyzeWaterQuality(reading);
   reading.status = status;
@@ -297,49 +300,55 @@ app.get('/alerts', (req, res) => {
 
 // ─── SAFE BACKGROUND SIMULATION (FIXED FOR YOUR SYSTEM) ─────────
 
-function startSimulation() {
-  setInterval(() => {
-    try {
-      const ph = Number((6 + Math.random() * 3).toFixed(2));
-      const turbidity = Number((Math.random() * 10).toFixed(2));
+function runSimulationOnce() {
+  try {
+    const ph = Number((6 + Math.random() * 3).toFixed(2));
+    const turbidity = Number((Math.random() * 10).toFixed(2));
 
-      const reading = {
-        sensorId: "sim-safe",
-        ph,
-        turbidity,
-        temperature: null,
-        dissolvedOxygen: null,
-        conductivity: null,
-        tds: null,
-        timestamp: new Date().toISOString(),
-      };
+    const reading = {
+      sensorId: "sim-safe",
+      ph,
+      turbidity,
+      temperature: null,
+      dissolvedOxygen: null,
+      conductivity: null,
+      tds: null,
+      timestamp: new Date().toISOString(),
+    };
 
-      const { status, action } = analyzeWaterQuality(reading);
-      reading.status = status;
-      reading.action = action;
+    const { status, action } = analyzeWaterQuality(reading);
+    reading.status = status;
+    reading.action = action;
 
-      // ✅ correct storage (matches your architecture)
-      latestByNode.set("sim-safe", reading);
+    latestByNode.set("sim-safe", reading);
 
-      if (!nodeHistory.has("sim-safe")) {
-        nodeHistory.set("sim-safe", []);
-      }
-
-      const hist = nodeHistory.get("sim-safe");
-      hist.push(reading);
-
-      if (hist.length > NODE_HISTORY_CAP) hist.shift();
-
-      console.log("Simulated:", reading);
-
-    } catch (err) {
-      console.error("Simulation error:", err.message);
+    if (!nodeHistory.has("sim-safe")) {
+      nodeHistory.set("sim-safe", []);
     }
-  }, 5000);
+
+    const hist = nodeHistory.get("sim-safe");
+    hist.push(reading);
+
+    if (hist.length > NODE_HISTORY_CAP) hist.shift();
+
+    console.log("Simulated:", reading);
+
+  } catch (err) {
+    console.error("Simulation error:", err.message);
+  }
+}
+
+function startSimulation() {
+  runSimulationOnce();              // 🔥 immediate run
+  setInterval(runSimulationOnce, 5000);
 }
 // ── Start ──────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`Smart Eco-Water Grid API running on http://localhost:${PORT}`);
+
+  console.log("🚀 Starting simulation..."); // debug log
+
+  startSimulation();
 });
 
 module.exports = app;

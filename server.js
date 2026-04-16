@@ -321,7 +321,9 @@ function startSimulation() {
 }
 // ── Start ──────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-   console.log(`Smart Eco-Water Grid API running on http://localhost:${PORT}`);
+  console.log(`Smart Eco-Water Grid API running on http://localhost:${PORT}`);
+  
+  startSimulation(); // 
 });
 
 module.exports = app;

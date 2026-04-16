@@ -309,10 +309,10 @@ function runSimulationOnce() {
       sensorId: "sim-safe",
       ph,
       turbidity,
-      temperature: null,
-      dissolvedOxygen: null,
-      conductivity: null,
-      tds: null,
+     temperature: Number((20 + Math.random() * 10).toFixed(2)),
+dissolvedOxygen: Number((4 + Math.random() * 4).toFixed(2)),
+conductivity: Number((200 + Math.random() * 300).toFixed(2)),
+tds: Number((100 + Math.random() * 400).toFixed(2)),
       timestamp: new Date().toISOString(),
     };
 

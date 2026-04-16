@@ -302,36 +302,40 @@ app.get('/alerts', (req, res) => {
 
 function runSimulationOnce() {
   try {
-    const ph = Number((6 + Math.random() * 3).toFixed(2));
-    const turbidity = Number((Math.random() * 10).toFixed(2));
+    deploymentNodes.forEach(node => {
 
-    const reading = {
-      sensorId: "sim-safe",
-      ph,
-      turbidity,
-     temperature: Number((20 + Math.random() * 10).toFixed(2)),
-dissolvedOxygen: Number((4 + Math.random() * 4).toFixed(2)),
-conductivity: Number((200 + Math.random() * 300).toFixed(2)),
-tds: Number((100 + Math.random() * 400).toFixed(2)),
-      timestamp: new Date().toISOString(),
-    };
+      const ph = Number((6 + Math.random() * 3).toFixed(2));
+      const turbidity = Number((Math.random() * 10).toFixed(2));
 
-    const { status, action } = analyzeWaterQuality(reading);
-    reading.status = status;
-    reading.action = action;
+      const reading = {
+        sensorId: node.id,
+        ph,
+        turbidity,
+        temperature: Number((20 + Math.random() * 10).toFixed(2)),
+        dissolvedOxygen: Number((4 + Math.random() * 4).toFixed(2)),
+        conductivity: Number((200 + Math.random() * 300).toFixed(2)),
+        tds: Number((100 + Math.random() * 400).toFixed(2)),
+        timestamp: new Date().toISOString(),
+      };
 
-    latestByNode.set("sim-safe", reading);
+      const { status, action } = analyzeWaterQuality(reading);
+      reading.status = status;
+      reading.action = action;
 
-    if (!nodeHistory.has("sim-safe")) {
-      nodeHistory.set("sim-safe", []);
-    }
+      latestByNode.set(node.id, reading);
 
-    const hist = nodeHistory.get("sim-safe");
-    hist.push(reading);
+      if (!nodeHistory.has(node.id)) {
+        nodeHistory.set(node.id, []);
+      }
 
-    if (hist.length > NODE_HISTORY_CAP) hist.shift();
+      const hist = nodeHistory.get(node.id);
+      hist.push(reading);
 
-    console.log("Simulated:", reading);
+      if (hist.length > NODE_HISTORY_CAP) hist.shift();
+
+    });
+
+    console.log("Simulated all nodes");
 
   } catch (err) {
     console.error("Simulation error:", err.message);
